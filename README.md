@@ -8,7 +8,7 @@ Podendo assim, fazer os apontamentos de máquina parada, tempo de reparos, tempo
 # Links 
 [Trello](https://trello.com/b/2zx0wjCj/matheus-augusto-daminelli)
 
-## Licença
+## Liscença
 
 Este repositório está licenciado sob a licença Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0). Você pode visualizar e compartilhar o material, mas não pode usá-lo para fins comerciais, nem modificar ou distribuir derivados.
 
