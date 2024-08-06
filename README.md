@@ -3,6 +3,7 @@ Projeto para meu TCC do Técnico em Informática
 
 # O que é
 Meu projeto consiste em criar um programa que irá ser utilizado em indústrias que utilizem maquinários que necessitam de pessoas monitorando ou trabalhando em cima, monitorar as manutenções da maquina, horarios de manutenções, quem irá fazer a manutenção. 
+Podendo assim, fazer os apontamentos de máquina parada, tempo de reparos, tempos de produção, cronograma e controle de quais manutenções serão necessárias, itens de extrema importância para reparos.
 
 # Links 
 [Trello](https://trello.com/b/2zx0wjCj/matheus-augusto-daminelli)
