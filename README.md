@@ -9,9 +9,16 @@ Podendo assim, fazer os apontamentos de máquina parada, tempo de reparos, tempo
 [Trello](https://trello.com/b/2zx0wjCj/matheus-augusto-daminelli)
 
 # Codigo Fonte
-Banco de dados: [Firebase](https://firebase.google.com/docs?hl=pt-br)
-Back-End: [Python](https://docs.python.org/3/)
-Front-End: [React-Native](https://reactnative.dev/docs/getting-started)
++ Banco de dados: [Firebase](https://firebase.google.com/docs?hl=pt-br)
++ Back-End: [Python](https://docs.python.org/3/)
++ Front-End: [React-Native](https://reactnative.dev/docs/getting-started)
+
+# Modelo Físico
+Utilizando a ferramenta de modelagem [dbdiagram.io](https://dbdiagram.io/home) para a criação de um modelo fisíco para o banco de dados. Modelo criado para conseguir uma boa visualização do que será feito.
+Arquivo fonte do projeto [Modelo Físico](https://dbdiagram.io/d/tcc-66bb96178b4bb5230e04d3db)
+
+![](https://github.com/user-attachments/assets/c27918ff-e1fb-429a-8738-ffddd65b5e47)
+
 
 ## Liscença
 
