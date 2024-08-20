@@ -13,6 +13,7 @@ Podendo assim, fazer os apontamentos de máquina parada, tempo de reparos, tempo
 + Back-End: [Python](https://docs.python.org/3/)
 + Front-End: [React-Native](https://reactnative.dev/docs/getting-started)
 
+
 # Modelo Físico
 Utilizando a ferramenta de modelagem [dbdiagram.io](https://dbdiagram.io/home) para a criação de um modelo fisíco para o banco de dados. Modelo criado para conseguir uma boa visualização do que será feito.
 Arquivo fonte do projeto [Modelo Físico](https://dbdiagram.io/d/tcc-66bb96178b4bb5230e04d3db)
