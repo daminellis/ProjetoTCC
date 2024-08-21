@@ -1,25 +1,35 @@
-import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
+import axios from 'axios';
 
 const App = () => {
-  const [dados, setDados] = useState([]);
+  const [data, setData] = useState(null);
 
   useEffect(() => {
-    axios.get('https://projeto-tcc-six.vercel.app/dados')
-      .then(response => {
-        setDados(response.data);
-      })
-      .catch(error => {
-        console.error(error);
-      });
+   teste();
   }, []);
 
-  return (
-    <View>
-      {dados.map((item, index) => (
-        <Text key={index}>{item}</Text>
-      ))}
+  async function teste() {
+    try {
+
+      
+      const api = axios.create({
+        baseURL: 'http://192.168.0.100:5000'
+      });
+      
+      console.log("data:");
+      const {data} = await api.get('/data');
+      console.log("data:", data);
+      setData(data);
+    } catch(e) {
+      console.log(e)
+    }
+      
+    }
+    
+    return (
+      <View>
+      <Text>{data ? data.message : 'Loadi...'}</Text>
     </View>
   );
 };
