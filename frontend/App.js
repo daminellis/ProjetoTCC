@@ -1,37 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
-import axios from 'axios';
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View } from 'react-native';
 
-const App = () => {
-  const [data, setData] = useState(null);
-
-  useEffect(() => {
-   teste();
-  }, []);
-
-  async function teste() {
-    try {
-
-      
-      const api = axios.create({
-        baseURL: 'http://192.168.0.100:5000'
-      });
-      
-      console.log("data:");
-      const {data} = await api.get('/data');
-      console.log("data:", data);
-      setData(data);
-    } catch(e) {
-      console.log(e)
-    }
-      
-    }
-    
-    return (
-      <View>
-      <Text>{data ? data.message : 'Loadi...'}</Text>
+export default function App() {
+  return (
+    <View style={styles.container}>
+      <Text>Open up App.js to start working on your app!</Text>
+      <StatusBar style="auto" />
     </View>
   );
-};
+}
 
-export default App;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
