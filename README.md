@@ -9,8 +9,8 @@ Podendo assim, fazer os apontamentos de máquina parada, tempo de reparos, tempo
 [Trello](https://trello.com/b/2zx0wjCj/matheus-augusto-daminelli)
 
 # Codigo Fonte
-+ Banco de dados: [Firebase](https://firebase.google.com/docs?hl=pt-br)
-+ Back-End: [Python](https://docs.python.org/3/)
++ Banco de dados: [MySQL](https://dev.mysql.com/doc/)
++ Back-End: [Python + FlakAPI](https://docs.python.org/3/)
 + Front-End: [React-Native](https://reactnative.dev/docs/getting-started)
 
 
