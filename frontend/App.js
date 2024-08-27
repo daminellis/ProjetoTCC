@@ -1,20 +1,26 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text } from 'react-native';
+import axios from 'axios';
 
-export default function App() {
+const App = () => {
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    // Faça a chamada à API do Flask
+    axios.get('http://10.32.17.60:5000/hello')
+      .then(response => {
+        setMessage(response.data.message);
+      })
+      .catch(error => {
+        console.error("Erro ao fazer a chamada para a API", error);
+      });
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
+    <View style={{ padding: 20 }}>
+      <Text>{message}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
