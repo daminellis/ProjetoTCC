@@ -1,25 +1,20 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
-import axios from 'axios';
+import 'react-native-gesture-handler';
+import * as React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import LoginScreen from './screens/LoginScreen'; 
+import HomeScreen from './screens/HomeScreen';
+
+const Drawer = createDrawerNavigator();
 
 const App = () => {
-  const [message, setMessage] = useState('');
-
-  useEffect(() => {
-    // Faça a chamada à API do Flask
-    axios.get('http://10.32.17.60:5000/hello')
-      .then(response => {
-        setMessage(response.data.message);
-      })
-      .catch(error => {
-        console.error("Erro ao fazer a chamada para a API", error);
-      });
-  }, []);
-
   return (
-    <View style={{ padding: 20 }}>
-      <Text>{message}</Text>
-    </View>
+    <NavigationContainer>
+      <Drawer.Navigator initialRouteName="Login">
+        <Drawer.Screen name="Login" component={LoginScreen} />
+        <Drawer.Screen name="Home" component={HomeScreen} />
+      </Drawer.Navigator>
+    </NavigationContainer>
   );
 }
 
