@@ -9,7 +9,7 @@ const LoginScreen = () => {
 
   const handleLogin = () => {
     setIsLoading(true);
-    axios.post('http://10.32.10.136:5000/login', { email, password })
+    axios.post('http://192.168.68.65:5000/login', { email, password })
       .then(response => {
         setIsLoading(false);
         if (response.data.success) {
