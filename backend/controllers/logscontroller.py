@@ -10,13 +10,19 @@ def logs_controller():
         id_operador = data.get('id_operador')
 
         try:
-            query = text("SELECT COUNT(*) FROM monitores WHERE id_maquina = :id_maquina AND id_operador = :id_operador")
-            result = db.engine.execute(query, id_maquina=id_maquina, id_operador=id_operador)
-            count = result.scalar()
+            query = text("SELECT id_maquina, id_operador FROM monitores WHERE id_maquina = :id_maquina AND id_operador = :id_operador")
+            result = db.session.execute(query, {'id_maquina': id_maquina, 'id_operador': id_operador})
+            usuario = result.fetchone()
 
-            if count == 0:
+            if not usuario:
                 return jsonify({'error': 'id_maquina or id_operador does not exist in the table monitores'})
 
+            objeto_usuario = {
+                'id_maquina': usuario.id_maquina,
+                'id_operador': usuario.id_operador,
+            }
+
+            return jsonify({'success': True, 'user': objeto_usuario})
 
         except SQLAlchemyError as e:
             error = str(e.__dict__['orig'])
