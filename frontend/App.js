@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createStackNavigator } from '@react-navigation/stack';
+import { View, ActivityIndicator } from 'react-native';
+
 import LoginScreen from './screens/LoginScreen'; 
 import HomeScreen from './screens/HomeScreen';
-import { View, ActivityIndicator } from 'react-native';
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
