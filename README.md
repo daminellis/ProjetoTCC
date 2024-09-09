@@ -18,7 +18,7 @@ Podendo assim, fazer os apontamentos de máquina parada, tempo de reparos, tempo
 Utilizando a ferramenta de modelagem [dbdiagram.io](https://dbdiagram.io/home) para a criação de um modelo fisíco para o banco de dados. Modelo criado para conseguir uma boa visualização do que será feito.
 Arquivo fonte do projeto [Modelo Físico](https://dbdiagram.io/d/tcc-66bb96178b4bb5230e04d3db)
 
-![image](https://github.com/user-attachments/assets/3d3cdb19-bc1f-45cc-9e56-fb6668e2a862)
+![image](https://github.com/user-attachments/assets/7ff13a71-79ee-44f5-b44d-652916ef9975)
 
 ## Liscença
 
