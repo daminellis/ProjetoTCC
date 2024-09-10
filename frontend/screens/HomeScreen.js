@@ -1,3 +1,6 @@
+import React, { useEffect, useState } from 'react';
+import { View, Text } from 'react-native';
+
 const HomeScreen = ({ route }) => {
   const { id_operador } = route.params || {}; // Obtém o id_operador passado pela navegação
   const [userName, setUserName] = useState('');
