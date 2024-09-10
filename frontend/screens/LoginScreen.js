@@ -10,6 +10,7 @@ const LoginScreen = ({ navigation, setUserToken }) => {
   const handleLogin = () => {
     setIsLoading(true);
     axios.post('http://10.32.18.16:5000/login', { id_maquina, id_operador })
+    //sempre lembre de trocar o ip para o ip da sua maquina!!!!
       .then(response => {
         setIsLoading(false);
         if (response.data.success) {
