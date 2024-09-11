@@ -13,9 +13,7 @@ const Stack = createStackNavigator();
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [userToken, setUserToken] = useState(null);
 
-  // Simulando carregamento inicial, como verificar um token de login no armazenamento local
   useEffect(() => {
     setTimeout(() => {
       setIsLoading(false);
@@ -32,21 +30,33 @@ const App = () => {
 
   return (
     <NavigationContainer>
-      {userToken ? (
-        <Drawer.Navigator initialRouteName="Home">
-          <Drawer.Screen name="Home" component={HomeScreen} />
-        </Drawer.Navigator>
-      ) : (
-        <Stack.Navigator>
-          <Stack.Screen 
-            name="Login" 
-            options={{ headerShown: false }}>
-            {props => <LoginScreen {...props} setUserToken={setUserToken} />}
-          </Stack.Screen>
-        </Stack.Navigator>
-      )}
+      <Stack.Navigator>
+        <Stack.Screen 
+          name="Login" 
+          options={{ headerShown: false }}
+          component={LoginScreen} 
+        />
+        <Stack.Screen 
+          name="Drawer" 
+          component={DrawerNavigator} 
+          options={{ headerShown: false }}
+        />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
+
+const DrawerNavigator = ({ route }) => {
+  const { id_operador } = route.params || {}; // Recebe o id_operador da navegação
+
+  return (
+    <Drawer.Navigator initialRouteName="Home">
+      <Drawer.Screen name="Home">
+        {props => <HomeScreen {...props} id_operador={id_operador} />}
+      </Drawer.Screen>
+      {/* Adicione outras telas ao drawer aqui */}
+    </Drawer.Navigator>
+  );
+};
 
 export default App;

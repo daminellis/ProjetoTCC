@@ -2,21 +2,19 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert } from 'react-native';
 import axios from 'axios';
 
-const LoginScreen = ({ navigation, setUserToken }) => {
+const LoginScreen = ({ navigation }) => {
   const [id_maquina, setId_maquina] = useState('');
   const [id_operador, setId_operador] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = () => {
     setIsLoading(true);
-    axios.post('http://10.32.18.16:5000/login', { id_maquina, id_operador })
-    //sempre lembre de trocar o ip para o ip da sua maquina!!!!
+    axios.post('http://192.168.68.65:5000/login', { id_maquina, id_operador })
       .then(response => {
         setIsLoading(false);
         if (response.data.success) {
-          // Supondo que o servidor retorne um token ou ID do operador em caso de sucesso
-          const token = response.data.token || response.data.user.id_operador;
-          setUserToken(token); // Definir o token ou ID do operador
+          // Navegar para o DrawerNavigator passando o id_operador como parâmetro
+          navigation.navigate('Drawer', { id_operador: response.data.user.id_operador });
           Alert.alert('Login Successful', `Welcome, ${response.data.user.id_operador}!`);
         } else {
           Alert.alert('Login Failed', response.data.error);
