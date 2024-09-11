@@ -1,3 +1,4 @@
+// src/App.js
 import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
@@ -7,6 +8,7 @@ import { View, ActivityIndicator } from 'react-native';
 
 import LoginScreen from './screens/LoginScreen'; 
 import HomeScreen from './screens/HomeScreen';
+import { UserProvider } from './contexts/UserContext'; // Importar o contexto
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
@@ -29,31 +31,29 @@ const App = () => {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen 
-          name="Login" 
-          options={{ headerShown: false }}
-          component={LoginScreen} 
-        />
-        <Stack.Screen 
-          name="Drawer" 
-          component={DrawerNavigator} 
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <UserProvider>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen 
+            name="Login" 
+            options={{ headerShown: false }}
+            component={LoginScreen} 
+          />
+          <Stack.Screen 
+            name="Drawer" 
+            component={DrawerNavigator} 
+            options={{ headerShown: false }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </UserProvider>
   );
 }
 
-const DrawerNavigator = ({ route }) => {
-  const { id_operador } = route.params || {}; // Recebe o id_operador da navegação
-
+const DrawerNavigator = () => {
   return (
     <Drawer.Navigator initialRouteName="Home">
-      <Drawer.Screen name="Home">
-        {props => <HomeScreen {...props} id_operador={id_operador} />}
-      </Drawer.Screen>
+      <Drawer.Screen name="Home" component={HomeScreen} />
       {/* Adicione outras telas ao drawer aqui */}
     </Drawer.Navigator>
   );

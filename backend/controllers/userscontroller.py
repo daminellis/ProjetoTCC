@@ -13,11 +13,13 @@ def users_controller(id_operador):
             user = result.fetchone()
 
         if user:
+            # user é uma tupla, então acesse pelo índice
+            nome = user[0]  # Supondo que 'nome' é o primeiro e único valor retornado
             return jsonify({
                 "success": True,
                 "user": {
                     "id_operador": id_operador,
-                    "nome": user['nome']  # Retorna o nome do operador
+                    "nome": nome  # Retorna o nome do operador
                 }
             }), 200
         else:

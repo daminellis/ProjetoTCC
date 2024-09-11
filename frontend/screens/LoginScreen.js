@@ -1,11 +1,14 @@
+// src/screens/LoginScreen.js
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert } from 'react-native';
 import axios from 'axios';
+import { useUser } from '../contexts/UserContext'; // Importar o contexto
 
 const LoginScreen = ({ navigation }) => {
   const [id_maquina, setId_maquina] = useState('');
   const [id_operador, setId_operador] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { setUser } = useUser(); // Usar o contexto
 
   const handleLogin = () => {
     setIsLoading(true);
@@ -13,8 +16,8 @@ const LoginScreen = ({ navigation }) => {
       .then(response => {
         setIsLoading(false);
         if (response.data.success) {
-          // Navegar para o DrawerNavigator passando o id_operador como parâmetro
-          navigation.navigate('Drawer', { id_operador: response.data.user.id_operador });
+          setUser({ id_operador: response.data.user.id_operador });
+          navigation.navigate('Drawer');
           Alert.alert('Login Successful', `Welcome, ${response.data.user.id_operador}!`);
         } else {
           Alert.alert('Login Failed', response.data.error);
