@@ -12,7 +12,7 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = () => {
     setIsLoading(true);
-    axios.post('http://192.168.68.65:5000/login', { id_maquina, id_operador })
+    axios.post('http://10.32.8.240:5000/login', { id_maquina, id_operador })
       .then(response => {
         setIsLoading(false);
         if (response.data.success) {

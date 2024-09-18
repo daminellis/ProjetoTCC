@@ -15,7 +15,7 @@ def logs_controller():
             usuario = result.fetchone()
 
             if not usuario:
-                return jsonify({'error': 'id_maquina or id_operador does not exist in the table monitores'})
+                return jsonify({'error': 'A senha ou usuário estão incorretos.'})
 
             objeto_usuario = {
                 'id_maquina': usuario.id_maquina,
