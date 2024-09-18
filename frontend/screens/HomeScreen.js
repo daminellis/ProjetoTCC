@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, Button, TouchableOpacity, Image, Alert } from 'react-native';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
 import moment from 'moment';
@@ -28,7 +28,16 @@ const HomeScreen = () => {
   
             if (currentTime.isBefore(workStartTime)) {
               setRemainingTime('Expediente ainda não começou');
-              navigation.navigate('Login', { message: 'Expediente ainda não começou' });
+              Alert.alert(
+                "Expediente ainda não começou",
+                "Por favor, aguarde o início do expediente",
+                [
+                  {
+                     text: "OK",
+                     onPress: () => navigation.navigate('Login')
+                  }
+                ]
+              );
               return;
             }
   
@@ -40,7 +49,17 @@ const HomeScreen = () => {
               setRemainingTime(`${hours} horas e ${minutes} minutos`);
             } else {
               setRemainingTime('Expediente encerrado');
-              navigation.navigate('Login', { message: 'Expediente encerrado' });
+              Alert.alert(
+                "Seu expediente acabou",
+                "Bom descanso e até amanhã!",
+                [
+                  {
+                     text: "OK",
+                     onPress: () => navigation.navigate('Login')
+                  }
+                ]
+              );
+              return;
             }
           } else {
             setError(response.data.error);
