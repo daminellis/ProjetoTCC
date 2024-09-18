@@ -2,24 +2,46 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Button, TouchableOpacity, Image } from 'react-native';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import moment from 'moment';
+import { useNavigation } from '@react-navigation/native'; // Importar o hook de navegação
 
 const HomeScreen = () => {
   const { user } = useUser();
   const [userName, setUserName] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [remainingTime, setRemainingTime] = useState('...');  // Simulando o tempo restante
-  const [machineName, setMachineName] = useState('máquina');  // Simulando o nome da máquina
+  const [remainingTime, setRemainingTime] = useState('...');
+  const [machineName, setMachineName] = useState('máquina');
+  const navigation = useNavigation(); // Usar navegação
 
   useEffect(() => {
     if (user?.id_operador) {
       const fetchUserName = async () => {
         try {
-          const response = await axios.get(`http://10.32.8.240:5000/users/${user.id_operador}`);
+          const response = await axios.get(`http://10.32.6.104:5000/users/${user.id_operador}`);
           if (response.data.success) {
             setUserName(response.data.user.nome);
-            // Simular outras informações
-            setRemainingTime('120');  // Supondo 120 minutos restantes
+  
+            const workStartTime = moment(response.data.user.horario_de_trabalho, 'HH:mm:ss');
+            const currentTime = moment();
+            const endWorkTime = workStartTime.clone().add(10, 'hours');
+  
+            if (currentTime.isBefore(workStartTime)) {
+              setRemainingTime('Expediente ainda não começou');
+              navigation.navigate('Login', { message: 'Expediente ainda não começou' });
+              return;
+            }
+  
+            const remaining = moment.duration(endWorkTime.diff(currentTime));
+  
+            if (remaining.asMinutes() > 0) {
+              const hours = Math.floor(remaining.asHours());
+              const minutes = Math.floor(remaining.minutes());
+              setRemainingTime(`${hours} horas e ${minutes} minutos`);
+            } else {
+              setRemainingTime('Expediente encerrado');
+              navigation.navigate('Login', { message: 'Expediente encerrado' });
+            }
           } else {
             setError(response.data.error);
           }
@@ -30,12 +52,13 @@ const HomeScreen = () => {
           setLoading(false);
         }
       };
-
+  
       fetchUserName();
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, navigation]);
+  // Adicionar navigation às dependências
 
   if (loading) {
     return (
@@ -61,7 +84,7 @@ const HomeScreen = () => {
       <View style={styles.content}>
         <Image source={require('../assets/logo.png')} style={styles.logo} />
         <Text style={styles.monitoringText}>Ferramenta de monitoramento</Text>
-        <Text style={styles.infoText}>Você irá trabalhar por mais: {remainingTime} minutos</Text>
+        <Text style={styles.infoText}>Você irá trabalhar por mais: {remainingTime}</Text>
         <Text style={styles.infoText}>Máquina sendo monitorada: {machineName}</Text>
         <TouchableOpacity style={styles.button} onPress={() => alert("Problema reportado")}>
           <Text style={styles.buttonText}>Viu algo de errado? Clique aqui e avise</Text>
@@ -138,7 +161,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: 'black',
-    fontSize: 32, // tamanho similar ao "loginButtonText"
+    fontSize: 32,
     fontWeight: 'bold',
   },
   loadingContainer: {
