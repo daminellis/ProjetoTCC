@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Button, TouchableOpacity, Image, Alert } from '
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
 import moment from 'moment';
-import { useNavigation } from '@react-navigation/native'; // Importar o hook de navegação
+import { useNavigation } from '@react-navigation/native'; 
 import { api } from '../api/api';
 
 const HomeScreen = () => {
@@ -12,10 +12,12 @@ const HomeScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [remainingTime, setRemainingTime] = useState('...');
-  const [machineName, setMachineName] = useState('máquina');
-  const navigation = useNavigation(); // Usar navegação
+  const [machineName, setMachineName] = useState('máaquina');
+  const navigation = useNavigation(); 
 
   useEffect(() => {
+    let intervalId; // Variável para armazenar o ID do intervalo
+  
     if (user?.id_operador) {
       const fetchUserName = async () => {
         try {
@@ -23,45 +25,53 @@ const HomeScreen = () => {
           if (response.data.success) {
             setUserName(response.data.user.nome);
   
-            const workStartTime = moment(response.data.user.horario_de_trabalho, 'HH:mm:ss');
-            const currentTime = moment();
-            const endWorkTime = workStartTime.clone().add(10, 'hours');
+            const updateRemainingTime = () => {
+              const workStartTime = moment(response.data.user.horario_de_trabalho, 'HH:mm:ss');
+              const currentTime = moment();
+              const endWorkTime = workStartTime.clone().add(10, 'hours');
   
-            if (currentTime.isBefore(workStartTime)) {
-              setRemainingTime('Expediente ainda não começou');
-              Alert.alert(
-                "Expediente ainda não começou",
-                "Por favor, aguarde o início do expediente",
-                [
-                  {
-                     text: "OK",
-                     onPress: () => navigation.navigate('Login')
-                  }
-                ]
-              );
-              return;
-            }
+              if (currentTime.isBefore(workStartTime)) {
+                setRemainingTime('Expediente ainda não começou');
+                Alert.alert(
+                  "Expediente ainda não começou",
+                  "Por favor, aguarde o início do expediente",
+                  [
+                    {
+                      text: "OK",
+                      onPress: () => navigation.navigate('Login')
+                    }
+                  ]
+                );
+                return;
+              }
   
-            const remaining = moment.duration(endWorkTime.diff(currentTime));
+              const remaining = moment.duration(endWorkTime.diff(currentTime));
   
-            if (remaining.asMinutes() > 0) {
-              const hours = Math.floor(remaining.asHours());
-              const minutes = Math.floor(remaining.minutes());
-              setRemainingTime(`${hours} horas e ${minutes} minutos`);
-            } else {
-              setRemainingTime('Expediente encerrado');
-              Alert.alert(
-                "Seu expediente acabou",
-                "Bom descanso e até amanhã!",
-                [
-                  {
-                     text: "OK",
-                     onPress: () => navigation.navigate('Login')
-                  }
-                ]
-              );
-              return;
-            }
+              if (remaining.asMinutes() > 0) {
+                const hours = Math.floor(remaining.asHours());
+                const minutes = Math.floor(remaining.minutes());
+                setRemainingTime(`${hours} horas e ${minutes} minutos`);
+              } else {
+                setRemainingTime('Expediente encerrado');
+                Alert.alert(
+                  "Seu expediente acabou",
+                  "Bom descanso e até amanhã!",
+                  [
+                    {
+                      text: "OK",
+                      onPress: () => navigation.navigate('Login')
+                    }
+                  ]
+                );
+                return;
+              }
+            };
+  
+            // Atualizar o tempo restante na primeira vez que o componente monta
+            updateRemainingTime();
+  
+            // Atualizar o tempo restante a cada 1 minuto
+            intervalId = setInterval(updateRemainingTime, 60000); // 60000ms = 1 minuto
           } else {
             setError(response.data.error);
           }
@@ -77,8 +87,13 @@ const HomeScreen = () => {
     } else {
       setLoading(false);
     }
-  }, [user, navigation]);
-  // Adicionar navigation às dependências
+  
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId); // Limpar o intervalo ao desmontar o componente
+      }
+    };
+  }, [user, navigation]);  
 
   if (loading) {
     return (
