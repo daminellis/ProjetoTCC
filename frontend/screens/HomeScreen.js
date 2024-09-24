@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
 import moment from 'moment';
 import { useNavigation } from '@react-navigation/native'; // Importar o hook de navegação
+import { api } from '../api/api';
 
 const HomeScreen = () => {
   const { user } = useUser();
@@ -18,7 +19,7 @@ const HomeScreen = () => {
     if (user?.id_operador) {
       const fetchUserName = async () => {
         try {
-          const response = await axios.get(`http://10.32.6.104:5000/users/${user.id_operador}`);
+          const response = await api.get(`/users/${user.id_operador}`);
           if (response.data.success) {
             setUserName(response.data.user.nome);
   

@@ -1,14 +1,13 @@
-// src/App.js
 import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer'; // Mantendo DrawerItemList
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, ActivityIndicator } from 'react-native';
 
 import LoginScreen from './screens/LoginScreen'; 
 import HomeScreen from './screens/HomeScreen';
-import { UserProvider } from './contexts/UserContext'; // Importar o contexto
+import { UserProvider, useUser } from './contexts/UserContext';
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
@@ -52,10 +51,32 @@ const App = () => {
 
 const DrawerNavigator = () => {
   return (
-    <Drawer.Navigator initialRouteName="Home">
+    <Drawer.Navigator drawerContent={(props) => <CustomDrawerContent {...props} />}>
       <Drawer.Screen name="Home" component={HomeScreen} />
       {/* Adicione outras telas ao drawer aqui */}
     </Drawer.Navigator>
+  );
+};
+
+// Custom Drawer Content
+const CustomDrawerContent = (props) => {
+  const { setUser } = useUser(); // Pega o setUser do contexto
+
+  const handleLogout = () => {
+    setUser(null); // Desloga o usuário
+    props.navigation.navigate('Login'); // Volta para a tela de login
+  };
+
+  return (
+    <DrawerContentScrollView {...props}>
+      {/* Exibe todas as telas da drawer */}
+      <DrawerItemList {...props} />
+      {/* Botão de Logoff */}
+      <DrawerItem
+        label="Logoff"
+        onPress={handleLogout}
+      />
+    </DrawerContentScrollView>
   );
 };
 

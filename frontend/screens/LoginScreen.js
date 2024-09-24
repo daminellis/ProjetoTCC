@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, Image, StyleSheet, Linking } from 'react-native';
 import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
+import { api } from '../api/api';
 // lembrar de importar o link do contato do tecnico
 
 const LoginScreen = ({ navigation }) => {
@@ -12,7 +13,7 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = () => {
     setIsLoading(true);
-    axios.post('http://10.32.6.104:5000/login', { id_maquina, id_operador })
+    api.post('/login', { id_maquina, id_operador })
       .then(response => {
         setIsLoading(false);
         if (response.data.success) {
