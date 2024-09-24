@@ -7,6 +7,8 @@ import { View, ActivityIndicator } from 'react-native';
 
 import LoginScreen from './screens/LoginScreen'; 
 import HomeScreen from './screens/HomeScreen';
+import WarningScreen from './screens/WarningScreen';
+
 import { UserProvider, useUser } from './contexts/UserContext';
 
 const Drawer = createDrawerNavigator();
@@ -53,6 +55,7 @@ const DrawerNavigator = () => {
   return (
     <Drawer.Navigator drawerContent={(props) => <CustomDrawerContent {...props} />}>
       <Drawer.Screen name="Home" component={HomeScreen} />
+      <Drawer.Screen name="Warning" component={WarningScreen} />
       {/* Adicione outras telas ao drawer aqui */}
     </Drawer.Navigator>
   );

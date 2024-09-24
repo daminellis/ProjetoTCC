@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, Image, StyleSheet, Linking } from 'react-native';
-import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
 import { api } from '../api/api';
 // lembrar de importar o link do contato do tecnico

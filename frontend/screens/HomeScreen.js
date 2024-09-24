@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Button, TouchableOpacity, Image, Alert } from 'react-native';
-import axios from 'axios';
 import { useUser } from '../contexts/UserContext';
 import moment from 'moment';
 import { useNavigation } from '@react-navigation/native'; 
 import { api } from '../api/api';
+
 
 const HomeScreen = () => {
   const { user } = useUser();
@@ -121,7 +121,7 @@ const HomeScreen = () => {
         <Text style={styles.monitoringText}>Ferramenta de monitoramento</Text>
         <Text style={styles.infoText}>Você irá trabalhar por mais: {remainingTime}</Text>
         <Text style={styles.infoText}>Máquina sendo monitorada: {machineName}</Text>
-        <TouchableOpacity style={styles.button} onPress={() => alert("Problema reportado")}>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Warning')}>
           <Text style={styles.buttonText}>Viu algo de errado? Clique aqui e avise</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.button, styles.emergencyButton]} onPress={() => alert("Emergência!")}>
