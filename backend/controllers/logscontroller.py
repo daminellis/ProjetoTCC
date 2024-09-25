@@ -27,3 +27,29 @@ def logs_controller():
         except SQLAlchemyError as e:
             error = str(e.__dict__['orig'])
             return jsonify({'error': error})
+        
+def logstecnico_controller():
+    if request.method == 'POST':
+        data = request.get_json()
+        id_tecnico = data.get('id_tecnico')
+        senha = data.get('senha')
+
+        try:
+            query = text("SELECT id_tecnico, nome FROM tecnicos WHERE id_tecnico = :id_tecnico AND senha = :senha")
+            result = db.session.execute(query, {'id_tecnico': id_tecnico, 'senha': senha})
+            tecnico = result.fetchone()
+
+            if not tecnico:
+                return jsonify({'error': 'A senha ou técnico estão incorretos.'})
+
+            objeto_tecnico = {
+                'id_tecnico': tecnico.id_tecnico,
+                'nome': tecnico.nome
+            }
+
+            return jsonify({'success': True, 'user': objeto_tecnico})
+
+        except SQLAlchemyError as e:
+            error = str(e.__dict__['orig'])
+            return jsonify({'error': error})
+
