@@ -7,21 +7,23 @@ import datetime
 def get_maquina(id_operador):
     try:
         with db.engine.connect() as connection:
-            # Obtendo o id_maquina associado ao id_operador na tabela monitores
             sql = text('SELECT id_maquina FROM monitores WHERE id_operador = :id_operador')
             result = connection.execute(sql, {'id_operador': id_operador})
             maquina = result.fetchone()
+            print(f"Resultado da query: {maquina}")  # Adicionando log para depuração
 
         if maquina:
-            return maquina[0]  # Retorna o id_maquina
+            id_maquina = maquina[0]
+            # Retorna um JSON com o id_maquina
+            return jsonify({"id_maquina": id_maquina}), 200
         else:
-            return None
+            print("Nenhuma máquina encontrada.")  # Mais um log para verificar se o operador tem máquina associada
+            return jsonify({"error": "Nenhuma máquina encontrada."}), 404
 
     except SQLAlchemyError as e:
         error = str(e.__dict__['orig'])
-        return jsonify({'error': error}), 500
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Erro ao buscar máquina: {error}")  # Log do erro SQL
+        return jsonify({"error": error}), 500
 
 def save_warning():
     try:
@@ -33,6 +35,8 @@ def save_warning():
 
         # Chama a função para obter o id_maquina
         id_maquina = get_maquina(id_operador)
+
+        # Se o id_maquina for None, retorna um erro 404
         if id_maquina is None:
             return jsonify({'success': False, 'error': 'Máquina não encontrada para o operador'}), 404
 

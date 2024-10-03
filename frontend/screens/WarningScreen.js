@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, StyleSheet, Text, TouchableOpacity, Alert } from 'react-native';
 import { useUser } from '../contexts/UserContext';
 import { api } from '../api/api';
@@ -6,20 +6,38 @@ import { api } from '../api/api';
 const WarningScreen = () => {
   const { user } = useUser();
   const [descricao, setDescricao] = useState('');
+  const [idMaquina, setIdMaquina] = useState(null);
+
+  // Faz o GET quando a tela é montada
+  useEffect(() => {
+    const fetchMaquina = async () => {
+      try {
+        if (!user?.id_operador) {
+          Alert.alert('Operador não autenticado', 'Por favor, faça login novamente.');
+          return;
+        }
+
+        const response = await api.get(`/monitores/${user.id_operador}`);
+        setIdMaquina(response.data.id_maquina);
+      } catch (error) {
+        console.error(error);
+        Alert.alert('Erro', 'Erro ao buscar máquina associada.');
+      }
+    };
+
+    fetchMaquina();
+  }, [user?.id_operador]);
 
   const handleSaveWarning = async () => {
     try {
-      if (!user?.id_operador) {
-        Alert.alert('Operador não autenticado', 'Por favor, faça login novamente.');
+      if (!idMaquina) {
+        Alert.alert('Erro', 'Máquina não encontrada.');
         return;
       }
 
-      const response = await api.get(`/monitores/${user.id_operador}`);
-      const id_maquina = response.data.id_maquina;
-
       await api.post(`/warning`, {
         id_operador: user.id_operador,
-        id_maquina,
+        id_maquina: idMaquina,
         descricao,
         criado_em: new Date().toISOString(),
       });
