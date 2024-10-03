@@ -10,30 +10,28 @@ def get_maquina(id_operador):
             sql = text('SELECT id_maquina FROM monitores WHERE id_operador = :id_operador')
             result = connection.execute(sql, {'id_operador': id_operador})
             maquina = result.fetchone()
-            print(f"Resultado da query: {maquina}")  # Adicionando log para depuração
 
         if maquina:
-            id_maquina = maquina[0]
-            # Retorna um JSON com o id_maquina
-            return jsonify({"id_maquina": id_maquina}), 200
+            return maquina[0]  # Retorna apenas o id_maquina
         else:
-            print("Nenhuma máquina encontrada.")  # Mais um log para verificar se o operador tem máquina associada
-            return jsonify({"error": "Nenhuma máquina encontrada."}), 404
+            return None  # Retorna None se nenhuma máquina for encontrada
 
     except SQLAlchemyError as e:
         error = str(e.__dict__['orig'])
-        print(f"Erro ao buscar máquina: {error}")  # Log do erro SQL
-        return jsonify({"error": error}), 500
+        print(f"Erro ao buscar máquina: {error}")
+        return None
 
 def save_warning():
     try:
         # Obtendo os dados da requisição JSON
         data = request.json
-        id_operador = data['id_operador']
-        descricao = data['descricao']
-        criado_em = datetime.datetime.now().isoformat()  # Obtendo o timestamp atual no formato ISO
+        
+        # Extrair diretamente do JSON
+        id_operador = data.get('id_operador')
+        descricao = data.get('descricao')
+        criado_em = datetime.datetime.now().isoformat()
 
-        # Chama a função para obter o id_maquina
+        # Obter id_maquina chamando a função get_maquina
         id_maquina = get_maquina(id_operador)
 
         # Se o id_maquina for None, retorna um erro 404
@@ -44,7 +42,7 @@ def save_warning():
         with db.engine.connect() as connection:
             # Inserindo o aviso na tabela warnings
             sql = text("""
-                INSERT INTO warnings (id_operador, id_maquina, descricao, criado_em) 
+                INSERT INTO logs (id_operador, id_maquina, descricao, criado_em) 
                 VALUES (:id_operador, :id_maquina, :descricao, :criado_em)
             """)
             connection.execute(sql, {
