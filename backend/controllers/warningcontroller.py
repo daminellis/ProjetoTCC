@@ -4,7 +4,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql import text
 import datetime
 
+id_maquina_global = None
+
 def get_maquina(id_operador):
+    global id_maquina_global
+
     try:
         with db.engine.connect() as connection:
             sql = text('SELECT id_maquina FROM monitores WHERE id_operador = :id_operador')
@@ -12,45 +16,41 @@ def get_maquina(id_operador):
             maquina = result.fetchone()
 
         if maquina:
-            return maquina[0]  # Retorna apenas o id_maquina
+            id_maquina_global = maquina[0]
+            return jsonify(id_maquina=id_maquina_global)
         else:
-            return None  # Retorna None se nenhuma máquina for encontrada
+            return jsonify(message="Nenhuma máquina encontrada"), 404
 
     except SQLAlchemyError as e:
         error = str(e.__dict__['orig'])
         print(f"Erro ao buscar máquina: {error}")
-        return None
+        return jsonify(message="Erro ao buscar máquina"), 500
 
 def save_warning():
+    global id_maquina_global
+
     try:
-        # Obtendo os dados da requisição JSON
         data = request.json
-        
-        # Extrair diretamente do JSON
         id_operador = data.get('id_operador')
         descricao = data.get('descricao')
         criado_em = datetime.datetime.now().isoformat()
 
-        # Obter id_maquina chamando a função get_maquina
-        id_maquina = get_maquina(id_operador)
+        if id_maquina_global is None:
+            response = get_maquina(id_operador)
+            return response
 
-        # Se o id_maquina for None, retorna um erro 404
-        if id_maquina is None:
-            return jsonify({'success': False, 'error': 'Máquina não encontrada para o operador'}), 404
-
-        # Conectando ao banco de dados
         with db.engine.connect() as connection:
-            # Inserindo o aviso na tabela warnings
             sql = text("""
                 INSERT INTO logs (id_operador, id_maquina, descricao, criado_em) 
                 VALUES (:id_operador, :id_maquina, :descricao, :criado_em)
             """)
             connection.execute(sql, {
                 'id_operador': id_operador,
-                'id_maquina': id_maquina,
+                'id_maquina': id_maquina_global,
                 'descricao': descricao,
                 'criado_em': criado_em
             })
+            connection.commit()  # Comitar as alterações
 
         return jsonify({
             "success": True,
@@ -59,6 +59,8 @@ def save_warning():
 
     except SQLAlchemyError as e:
         error = str(e.__dict__['orig'])
+        print(f"Erro ao salvar aviso: {error}")  # Log do erro
         return jsonify({'error': error}), 500
     except Exception as e:
+        print(f"Erro inesperado: {str(e)}")  # Log do erro
         return jsonify({'error': str(e)}), 500
