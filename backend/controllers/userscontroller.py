@@ -40,3 +40,33 @@ def users_controller(id_operador):
     except SQLAlchemyError as e:
         error = str(e.__dict__['orig'])
         return jsonify({'error': error}), 500
+
+
+def users_tecnico_controller(id_tecnico):
+    try:
+        with db.engine.connect() as connection:
+            sql = text('SELECT nome, area_de_manutencao FROM tecnicos WHERE id_tecnico = :id_tecnico')
+            result = connection.execute(sql, {'id_tecnico': id_tecnico})
+            user = result.fetchone()
+
+        if user:
+            nome = user[0]  # 'nome' está no índice 0 da tupla
+            especialidade = user[1]  # 'especialidade' está no índice 1
+
+            return jsonify({
+                "success": True,
+                "user": {
+                    "id_tecnico": id_tecnico,
+                    "nome": nome,
+                    "especialidade": especialidade
+                }
+            }), 200
+        else:
+            return jsonify({
+                "success": False,
+                "error": "Técnico não encontrado"
+            }), 404
+
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        return jsonify({'error': error}), 500

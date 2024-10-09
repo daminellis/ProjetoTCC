@@ -1,61 +1,68 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, Image, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, Image, StyleSheet, ActivityIndicator } from 'react-native';
 import { useUser } from '../contexts/UserContext';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useState, useCallback } from 'react';
 import { api } from '../api/api';
 
 const LoginScreen = ({ navigation }) => {
   const [id_maquina, setId_maquina] = useState('');
   const [id_operador, setId_operador] = useState('');
-  const [id_tecnico, setId_tecnico] = useState(''); // Estado para o id_tecnico
-  const [senha, setSenha] = useState(''); // Estado para a senha do técnico
+  const [id_tecnico, setId_tecnico] = useState('');
+  const [senha, setSenha] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isTecnico, setIsTecnico] = useState(false); // Estado para alternar entre login de técnico e operador
+  const [isTecnico, setIsTecnico] = useState(false);
   const { setUser } = useUser();
 
+  useFocusEffect(
+    useCallback(() => {
+      // Quando a tela ganha foco (quando você navega para ela)
+      return () => {
+        // Quando a tela perde foco (quando você sai da tela)
+        setId_maquina('');
+        setId_operador('');
+        setId_tecnico('');
+        setSenha('');
+      };
+    }, [])
+  );
+
   const handleLogin = () => {
+    if (isLoading) return;
+
+    // Validação de entradas
+    if (isTecnico && (!id_tecnico || !senha)) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos para o login de Técnico.');
+      return;
+    }
+
+    if (!isTecnico && (!id_maquina || !id_operador)) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos para o login de Operador.');
+      return;
+    }
+
     setIsLoading(true);
 
-    if (isTecnico) {
-      // Login para técnico
-      api.post('/logintecnicos', { id_tecnico, senha })
-        .then(response => {
-          setIsLoading(false);
-          if (response.data.success) {
-            setUser({ id_tecnico: response.data.user.id_tecnico });
-            navigation.navigate('DrawerTecnico'); // Redireciona para HomeTecnico
-            Alert.alert('Login Successful', `Welcome, Técnico ${response.data.user.id_tecnico}!`);
-          } else {
-            Alert.alert('Login Failed', response.data.error);
-          }
-        })
-        .catch(error => {
-          setIsLoading(false);
-          console.error("Error during login", error);
-          Alert.alert('Login Error', 'There was an error processing your request.');
-        });
-    } else {
-      // Login para operador
-      api.post('/login', { id_maquina, id_operador })
-        .then(response => {
-          setIsLoading(false);
-          if (response.data.success) {
-            setUser({ id_operador: response.data.user.id_operador });
-            navigation.navigate('Drawer'); // Redireciona para tela do operador
-            Alert.alert('Login Successful', `Welcome, ${response.data.user.id_operador}!`);
-          } else {
-            Alert.alert('Login Failed', response.data.error);
-          }
-        })
-        .catch(error => {
-          setIsLoading(false);
-          console.error("Error during login", error);
-          Alert.alert('Login Error', 'There was an error processing your request.');
-        });
-    }
-  };
+    const endpoint = isTecnico ? '/logintecnicos' : '/login';
+    const payload = isTecnico ? { id_tecnico, senha } : { id_maquina, id_operador };
 
-  const handleContactPress = () => {
-    navigation.navigate('nada ainda'); // Ajustar posteriormente
+    api.post(endpoint, payload)
+      .then(response => {
+        setIsLoading(false);
+        if (response.data.success) {
+          const user = isTecnico ? { id_tecnico: response.data.user.id_tecnico } : { id_operador: response.data.user.id_operador };
+          setUser(user);
+          const nextScreen = isTecnico ? 'DrawerTecnico' : 'Drawer';
+          navigation.navigate(nextScreen);
+          Alert.alert('Login bem-sucedido', `Bem-vindo, ${isTecnico ? 'Técnico' : 'Operador'} ${response.data.user.id_tecnico || response.data.user.id_operador}!`);
+        } else {
+          Alert.alert('Erro de login', response.data.error);
+        }
+      })
+      .catch(error => {
+        setIsLoading(false);
+        console.error("Erro no login:", error);
+        Alert.alert('Erro', 'Ocorreu um erro ao tentar fazer login.');
+      });
   };
 
   return (
@@ -64,40 +71,40 @@ const LoginScreen = ({ navigation }) => {
         <Text style={styles.headerText}>Login</Text>
       </View>
 
-
       <View style={styles.formContainer}>
         <Text style={styles.welcomeText}>Bem vindo!!</Text>
         <Image source={require('../assets/logo.png')} style={styles.logo} />
 
-      {/* Barra para alternar entre técnico e operador */}
-      <View style={styles.switchContainer}>
-        <TouchableOpacity
-          style={[styles.switchButton, !isTecnico && styles.activeSwitch]}
-          onPress={() => setIsTecnico(false)}
-        >
-          <Text style={styles.switchText}>Operador</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.switchButton, isTecnico && styles.activeSwitch]}
-          onPress={() => setIsTecnico(true)}
-        >
-          <Text style={styles.switchText}>Técnico</Text>
-        </TouchableOpacity>
-      </View>
-        {/* Formulário para técnico ou operador */}
+        {/* Alternância entre técnico e operador */}
+        <View style={styles.switchContainer}>
+          <TouchableOpacity
+            style={[styles.switchButton, !isTecnico && styles.activeSwitch]}
+            onPress={() => setIsTecnico(false)}
+          >
+            <Text style={styles.switchText}>Operador</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.switchButton, isTecnico && styles.activeSwitch]}
+            onPress={() => setIsTecnico(true)}
+          >
+            <Text style={styles.switchText}>Técnico</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Formulário de login */}
         {isTecnico ? (
           <>
             <Text style={styles.loginInstructions}>Login Técnico</Text>
             <TextInput
               style={styles.input}
-              placeholder="Digite seu ID Técnico"
+              placeholder="ID Técnico"
               value={id_tecnico}
               onChangeText={setId_tecnico}
               autoCapitalize="none"
             />
             <TextInput
               style={styles.input}
-              placeholder="Digite sua senha"
+              placeholder="Senha"
               value={senha}
               onChangeText={setSenha}
               secureTextEntry
@@ -108,28 +115,33 @@ const LoginScreen = ({ navigation }) => {
             <Text style={styles.loginInstructions}>Login Operador</Text>
             <TextInput
               style={styles.input}
-              placeholder="Digite aqui o login da máquina"
+              placeholder="ID Máquina"
               value={id_maquina}
               onChangeText={setId_maquina}
               autoCapitalize="none"
             />
             <TextInput
               style={styles.input}
-              placeholder="Digite aqui a senha da máquina"
+              placeholder="Senha Operador"
               value={id_operador}
               onChangeText={setId_operador}
+              secureTextEntry
             />
           </>
         )}
 
         <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoading}>
-          <Text style={styles.loginButtonText}>{isLoading ? "Logging in..." : "Log-in"}</Text>
+          {isLoading ? (
+            <ActivityIndicator size="small" color="black" />
+          ) : (
+            <Text style={styles.loginButtonText}>Log-in</Text>
+          )}
         </TouchableOpacity>
 
         <Text style={styles.helpText}>
-          Caso você não lembre o login e a senha, entre em contato com técnico.
+          Esqueceu o login ou a senha? Entre em contato com o técnico.
         </Text>
-        <Text style={styles.contactLink} onPress={handleContactPress}>
+        <Text style={styles.contactLink} onPress={() => navigation.navigate('Contact')}>
           Contato técnico
         </Text>
       </View>
