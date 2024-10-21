@@ -16,7 +16,7 @@ const HomeScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [remainingTime, setRemainingTime] = useState('...');
-  const [machineName, setMachineName] = useState('máaquina');
+  const [machineName] = useState('máaquina');
   const navigation = useNavigation(); 
 
   useEffect(() => {

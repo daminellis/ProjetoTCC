@@ -9,6 +9,7 @@ import LoginScreen from './screens/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import WarningScreen from './screens/WarningScreen';
 import HomeTecnicoScreen from './screens/HomeTecnicoScreen'; 
+import MaintenceScreen from './screens/MaintenceScreen';
 
 import { UserProvider, useUser } from './contexts/UserContext';
 
@@ -64,8 +65,7 @@ const DrawerNavigatorOperador = () => {
   return (
     <Drawer.Navigator drawerContent={(props) => <CustomDrawerContentOperador {...props} />}>
       <Drawer.Screen name="Home" component={HomeScreen} />
-      <Drawer.Screen name="Warning" component={WarningScreen} />
-      {/* Adicione outras telas ao drawer aqui */}
+      <Drawer.Screen name="Avisos" component={WarningScreen} />
     </Drawer.Navigator>
   );
 };
@@ -75,7 +75,7 @@ const DrawerNavigatorTecnico = () => {
   return (
     <Drawer.Navigator drawerContent={(props) => <CustomDrawerContentTecnico {...props} />}>
       <Drawer.Screen name="HomeTecnico" component={HomeTecnicoScreen} />
-      {/* Adicione outras telas específicas para o técnico */}
+      <Drawer.Screen name="Manutenções" component={MaintenceScreen} />
     </Drawer.Navigator>
   );
 };
