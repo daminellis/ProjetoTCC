@@ -50,7 +50,7 @@ def save_warning():
                 'descricao': descricao,
                 'criado_em': criado_em
             })
-            connection.commit()  # Comitar as alterações
+            connection.commit() 
 
         return jsonify({
             "success": True,

@@ -125,7 +125,7 @@ const HomeScreen = () => {
         <Text style={styles.monitoringText}>Ferramenta de monitoramento</Text>
         <Text style={styles.infoText}>Você irá trabalhar por mais: {remainingTime}</Text>
         <Text style={styles.infoText}>Máquina sendo monitorada: {machineName}</Text>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Warning')}>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Avisos')}>
           <Text style={styles.buttonText}>Viu algo de errado? Clique aqui e avise</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.button, styles.emergencyButton]} onPress={() => alert("Emergência!")}>

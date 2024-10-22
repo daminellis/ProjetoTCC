@@ -12,8 +12,8 @@ def users_controller(id_operador):
             user = result.fetchone()
 
         if user:
-            nome = user[0]  # 'nome' está no índice 0 da tupla
-            horario_de_trabalho = user[1]  # 'horario_de_trabalho' está no índice 1
+            nome = user[0]  
+            horario_de_trabalho = user[1]
 
             # Verifique se horario_de_trabalho é uma instância de datetime.time
             if isinstance(horario_de_trabalho, datetime.time):
@@ -50,8 +50,8 @@ def users_tecnico_controller(id_tecnico):
             user = result.fetchone()
 
         if user:
-            nome = user[0]  # 'nome' está no índice 0 da tupla
-            especialidade = user[1]  # 'especialidade' está no índice 1
+            nome = user[0]  
+            especialidade = user[1]  
 
             return jsonify({
                 "success": True,
