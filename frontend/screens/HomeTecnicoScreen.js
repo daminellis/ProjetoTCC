@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, FlatList, ActivityIndicator, Alert, Touc
 import { useUser } from '../contexts/UserContext';
 import { api } from '../api/api';
 import { Card } from 'react-native-paper';
-import { useFocusEffect } from '@react-navigation/native'; // Importando useFocusEffect
+import { useFocusEffect } from '@react-navigation/native';
 
 const HomeTecnicoScreen = () => {
   const { user } = useUser();
@@ -59,7 +59,7 @@ const HomeTecnicoScreen = () => {
         }
       };
       fetchServiceOrders();
-    }, []) // Sem dependências, pois você sempre quer buscar ao focar na tela
+    }, []) //sem dependências para buscar sempre que abrir a tela
   );
 
   const [expandedOrderId, setExpandedOrderId] = useState(null);
@@ -75,15 +75,24 @@ const HomeTecnicoScreen = () => {
       <Card style={styles.card}>
         <TouchableOpacity onPress={() => toggleCardContent(item.id_log)}>
           <Card.Content>
-            <Text style={styles.orderText}><Text style={styles.label}>Máquina ID:</Text> {item.id_maquina}</Text>
-            <Text style={styles.orderText}><Text style={styles.label}>Criado Em:</Text> {new Date(item.criado_em).toLocaleDateString()}</Text>
+            <Text style={styles.orderText}>
+              <Text style={styles.label}>Máquina ID:</Text> {item.id_maquina}
+            </Text>
+            <Text style={styles.orderText}>
+              <Text style={styles.label}>Criado Em:</Text> {new Date(item.criado_em).toLocaleString('pt-BR')} {/* Formatação dd/mm/yyyy HH:mm:ss */}
+            </Text>
 
             {isExpanded && (
               <View style={styles.detailsContainer}>
-                <Text style={styles.detailText}><Text style={styles.label}>ID do Log:</Text> {item.id_log}</Text>
-                <Text style={styles.detailText}><Text style={styles.label}>Descrição:</Text> {item.descricao}</Text>
-                <Text style={styles.detailText}><Text style={styles.label}>Operador ID:</Text> {item.id_operador}</Text>
-                <Text style={styles.detailText}><Text style={styles.label}>Criado Em:</Text> {new Date(item.criado_em).toLocaleString()}</Text>
+                <Text style={styles.detailText}>
+                  <Text style={styles.label}>ID do Log:</Text> {item.id_log}</Text>
+                <Text style={styles.detailText}>
+                  <Text style={styles.label}>Descrição:</Text> {item.descricao}</Text>
+                <Text style={styles.detailText}
+                ><Text style={styles.label}>Operador ID:</Text> {item.id_operador}</Text>
+                <Text style={styles.detailText}>
+                  <Text style={styles.label}>Criado Em:</Text> {new Date(item.criado_em).toLocaleString('pt-BR')} {/* Formatação dd/mm/yyyy HH:mm:ss */}
+                </Text>
               </View>
             )}
           </Card.Content>

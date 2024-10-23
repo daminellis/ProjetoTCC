@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, Text, Alert, ActivityIndicator, FlatList } from 'react-native';
 import { Card, Title, Paragraph } from 'react-native-paper';
 import { useUser } from '../contexts/UserContext'; 
@@ -33,12 +33,12 @@ const TechnicianTasksScreen = () => {
       };
 
       fetchServiceOrders();
-    }, [user?.id_tecnico]) // Dependência para atualizar quando o id do técnico mudar
+    }, [user?.id_tecnico]) //verificacao do id do técnico 
   );
-    //verificação de cards, abrir um de cada vez
-    const toggleCard = (id) => {
-      //if ID clicado for o mesmo do atualmente expandido, fecha-o; caso contrário, abre o novo
-      setExpandedOrderId((prev) => (prev === id ? null : id));
+
+  //verificação de cards, abrir um de cada vez
+  const toggleCard = (id) => {
+    setExpandedOrderId((prev) => (prev === id ? null : id));
   };
 
   const renderServiceOrder = ({ item }) => {
@@ -49,7 +49,7 @@ const TechnicianTasksScreen = () => {
         <TouchableOpacity onPress={() => toggleCard(item.id_manutencao)}>
           <Card.Content>
             <Text style={styles.cardActionText}>
-              <Text style={styles.label}>Data:</Text> {new Date(item.inicio_da_manutencao).toLocaleDateString()}
+              <Text style={styles.label}>Data:</Text> {new Date(item.inicio_da_manutencao).toLocaleDateString('pt-BR')} {/* Formatação dd/mm/yyyy */}
             </Text>
             <Text style={styles.cardActionText}>
               <Text style={styles.label}>ID Máquina:</Text> {item.id_maquina}
@@ -70,10 +70,10 @@ const TechnicianTasksScreen = () => {
               <Text style={styles.label}>Status:</Text> {item.status}
             </Paragraph>
             <Paragraph style={styles.detailText}>
-              <Text style={styles.label}>Início:</Text> {new Date(item.inicio_da_manutencao).toLocaleString()}
+              <Text style={styles.label}>Início:</Text> {new Date(item.inicio_da_manutencao).toLocaleString('pt-BR')} {/* Formatação dd/mm/yyyy HH:mm:ss */}
             </Paragraph>
             <Paragraph style={styles.detailText}>
-              <Text style={styles.label}>Término:</Text> {new Date(item.termino_da_manutencao).toLocaleString()}
+              <Text style={styles.label}>Término:</Text> {new Date(item.termino_da_manutencao).toLocaleString('pt-BR')} {/* Formatação dd/mm/yyyy HH:mm:ss */}
             </Paragraph>
           </Card.Content>
         )}
