@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer'; // Mantendo DrawerItemList
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, ActivityIndicator } from 'react-native';
 
@@ -9,9 +9,10 @@ import LoginScreen from './screens/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import WarningScreen from './screens/WarningScreen';
 import HomeTecnicoScreen from './screens/HomeTecnicoScreen'; 
-import MaintenceScreen from './screens/MaintenceScreen';
+import MaintenceScreen from './screens/MaintenceScreen'; 
 
 import { UserProvider, useUser } from './contexts/UserContext';
+import { Provider as PaperProvider } from 'react-native-paper';
 
 const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
@@ -20,9 +21,10 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
+    return () => clearTimeout(timer); // Limpa o timer se o componente desmontar
   }, []);
 
   if (isLoading) {
@@ -42,13 +44,11 @@ const App = () => {
             options={{ headerShown: false }}
             component={LoginScreen} 
           />
-          {/* Drawer para o operador */}
           <Stack.Screen 
             name="Drawer" 
             component={DrawerNavigatorOperador} 
             options={{ headerShown: false }}
           />
-          {/* Drawer para o técnico */}
           <Stack.Screen 
             name="DrawerTecnico" 
             component={DrawerNavigatorTecnico} 
@@ -60,7 +60,6 @@ const App = () => {
   );
 }
 
-// DrawerNavigator para o operador
 const DrawerNavigatorOperador = () => {
   return (
     <Drawer.Navigator drawerContent={(props) => <CustomDrawerContentOperador {...props} />}>
@@ -70,23 +69,23 @@ const DrawerNavigatorOperador = () => {
   );
 };
 
-// DrawerNavigator para o técnico
 const DrawerNavigatorTecnico = () => {
   return (
-    <Drawer.Navigator drawerContent={(props) => <CustomDrawerContentTecnico {...props} />}>
-      <Drawer.Screen name="HomeTecnico" component={HomeTecnicoScreen} />
-      <Drawer.Screen name="Manutenções" component={MaintenceScreen} />
-    </Drawer.Navigator>
+    <PaperProvider>
+      <Drawer.Navigator drawerContent={(props) => <CustomDrawerContentTecnico {...props} />}>
+        <Drawer.Screen name="HomeTecnico" component={HomeTecnicoScreen} />
+        <Drawer.Screen name="Manutenções" component={MaintenceScreen} />
+      </Drawer.Navigator>
+    </PaperProvider>
   );
 };
 
-// Custom Drawer Content para o operador
 const CustomDrawerContentOperador = (props) => {
-  const { setUser } = useUser(); // Pega o setUser do contexto
+  const { setUser } = useUser(); 
 
   const handleLogout = () => {
-    setUser(null); // Desloga o usuário
-    props.navigation.navigate('Login'); // Volta para a tela de login
+    setUser(null); 
+    props.navigation.navigate('Login'); 
   };
 
   return (
@@ -97,13 +96,12 @@ const CustomDrawerContentOperador = (props) => {
   );
 };
 
-// Custom Drawer Content para o técnico
 const CustomDrawerContentTecnico = (props) => {
   const { setUser } = useUser();
 
   const handleLogout = () => {
     setUser(null);
-    props.navigation.navigate('Login'); // Volta para a tela de login
+    props.navigation.navigate('Login');
   };
 
   return (

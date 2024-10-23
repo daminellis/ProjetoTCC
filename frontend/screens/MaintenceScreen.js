@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Alert, ActivityIndicator, FlatList } from 'react-native';
+import { View, StyleSheet, Text, Alert, ActivityIndicator, FlatList } from 'react-native';
+import { Card, Title, Paragraph } from 'react-native-paper';
 import { useUser } from '../contexts/UserContext'; 
 import { api } from '../api/api';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 
 const TechnicianTasksScreen = () => {
   const { user } = useUser(); 
   const [loading, setLoading] = useState(false);
   const [serviceOrders, setServiceOrders] = useState([]);
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
 
   useEffect(() => {
     const fetchServiceOrders = async () => {
@@ -30,19 +33,51 @@ const TechnicianTasksScreen = () => {
     fetchServiceOrders();
   }, [user?.id_tecnico]);
 
-  const renderServiceOrder = ({ item }) => (
-    <View style={styles.serviceOrderItem}>
-      <Text style={styles.serviceOrderText}>Descrição: {item.descricao}</Text>
-      <Text style={styles.serviceOrderText}>Custo de Peça: {item.custo_de_peca}</Text>
-      <Text style={styles.serviceOrderText}>Status: {item.status}</Text>
-      <Text style={styles.serviceOrderText}>
-        Início: {new Date(item.inicio_da_manutencao).toLocaleString()}
-      </Text>
-      <Text style={styles.serviceOrderText}>
-        Término: {new Date(item.termino_da_manutencao).toLocaleString()}
-      </Text>
-    </View>
-  );
+    //verificação de cards, abrir um de cada vez
+    const toggleCard = (id) => {
+      //if ID clicado for o mesmo do atualmente expandido, fecha-o; caso contrário, abre o novo
+      setExpandedOrderId((prev) => (prev === id ? null : id));
+    };
+  
+    const renderServiceOrder = ({ item }) => {
+      const isExpanded = expandedOrderId === item.id_manutencao; // Verifica se o card está expandido
+  
+    return (
+      <Card style={styles.card}>
+        <TouchableOpacity onPress={() => toggleCard(item.id_manutencao)}>
+          <Card.Content>
+            <Text style={styles.cardActionText}>
+              <Text style={styles.label}>Data:</Text> {new Date(item.inicio_da_manutencao).toLocaleDateString()}
+            </Text>
+            <Text style={styles.cardActionText}>
+              <Text style={styles.label}>ID Máquina:</Text> {item.id_maquina}
+            </Text>
+          </Card.Content>
+        </TouchableOpacity>
+
+        {isExpanded && (
+          <Card.Content style={styles.detailsContainer}>
+            <Title style={styles.details}>Detalhes da Ordem:</Title>
+            <Paragraph style={styles.detailText}>
+              <Text style={styles.label}>Descrição:</Text> {item.descricao}
+            </Paragraph>
+            <Paragraph style={styles.detailText}>
+              <Text style={styles.label}>Custo de Peça:</Text> {item.custo_de_peca}
+            </Paragraph>
+            <Paragraph style={styles.detailText}>
+              <Text style={styles.label}>Status:</Text> {item.status}
+            </Paragraph>
+            <Paragraph style={styles.detailText}>
+              <Text style={styles.label}>Início:</Text> {new Date(item.inicio_da_manutencao).toLocaleString()}
+            </Paragraph>
+            <Paragraph style={styles.detailText}>
+              <Text style={styles.label}>Término:</Text> {new Date(item.termino_da_manutencao).toLocaleString()}
+            </Paragraph>
+          </Card.Content>
+        )}
+      </Card>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -87,15 +122,38 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 30,
     padding: 20,
   },
-  serviceOrderItem: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-  },
-  serviceOrderText: {
+  details: {
     fontSize: 25,
-    marginBottom: 5,
+    color: '#333',
+    marginBottom: 10,
+  },
+  card: {
+    marginBottom: 15,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    elevation: 3, 
+  },
+  cardActionText: {
+    fontSize: 30,
+    color: '#333',
+  },
+  label: {
+    fontWeight: 'bold',
+    color: '#FEC601', 
+  },
+  detailsContainer: {
+    marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+  },
+  detailText: {
+    paddingVertical: 10, 
+    fontSize: 25,
+    color: '#333',
   },
   noDataText: {
     textAlign: 'center',

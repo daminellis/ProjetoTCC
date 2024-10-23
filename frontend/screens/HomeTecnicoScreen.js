@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, FlatList } from 'react-native';
+import { View, Text, StyleSheet, Image, FlatList, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useUser } from '../contexts/UserContext';
 import { api } from '../api/api';
+import { Card } from 'react-native-paper';
 
 const HomeTecnicoScreen = () => {
   const { user } = useUser();
   const [userName, setUserName] = useState('');
-  const [serviceOrders, setServiceOrders] = useState([]); // Inicialização como um array vazio
+  const [serviceOrders, setServiceOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.id_tecnico) {
-      const fetchUserName = async () => {
+    const fetchUserName = async () => {
+      if (user?.id_tecnico) {
         try {
           const response = await api.get(`/users/tecnicos/${user.id_tecnico}`);
           if (response.data.success) {
@@ -20,44 +22,68 @@ const HomeTecnicoScreen = () => {
           }
         } catch (error) {
           console.error("Error fetching user data", error);
+          Alert.alert("Erro", "Erro ao buscar dados do usuário.");
         }
-      };
-      fetchUserName();
-    }
+      }
+    };
+    fetchUserName();
   }, [user]);
 
   useEffect(() => {
     const fetchServiceOrders = async () => {
+      setLoading(true);
       try {
         const response = await api.get(`/allserviceorders`);
-        //console.log("Resposta completa da API:", response.data); // Log da resposta completa
-        if (response.data && response.data.service_orders) { 
-          // Verificar se a propriedade service_orders está presente e é um array
+        if (response.data && response.data.service_orders) {
           if (Array.isArray(response.data.service_orders)) {
             setServiceOrders(response.data.service_orders);
-            //console.log("Service Orders:", response.data.service_orders); // Log para verificar os dados
           } else {
             console.error("service_orders não é um array:", response.data.service_orders);
+            Alert.alert("Erro", "Dados inesperados recebidos da API.");
           }
         } else {
           console.error("Resposta inesperada da API:", response.data);
+          Alert.alert("Erro", "Resposta inesperada da API.");
         }
       } catch (error) {
         console.error("Error fetching service orders", error);
+        Alert.alert("Erro", "Erro ao buscar ordens de serviço.");
+      } finally {
+        setLoading(false);
       }
     };
     fetchServiceOrders();
   }, []);
 
-  const renderServiceOrder = ({ item }) => (
-    <View style={styles.orderContainer}>
-      <Text style={styles.orderText}><Text style={styles.label}>ID do Log:</Text> {item.id_log}</Text>
-      <Text style={styles.orderText}><Text style={styles.label}>Descrição:</Text> {item.descricao}</Text>
-      <Text style={styles.orderText}><Text style={styles.label}>Máquina ID:</Text> {item.id_maquina}</Text>
-      <Text style={styles.orderText}><Text style={styles.label}>Operador ID:</Text> {item.id_operador}</Text>
-      <Text style={styles.orderText}><Text style={styles.label}>Criado Em:</Text> {new Date(item.criado_em).toLocaleString()}</Text>
-    </View>
-  );
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
+
+  const toggleCardContent = (id) => {
+    setExpandedOrderId(expandedOrderId === id ? null : id);
+  };
+
+  const renderServiceOrder = ({ item }) => {
+    const isExpanded = expandedOrderId === item.id_log;
+
+    return (
+      <Card style={styles.card}>
+        <TouchableOpacity onPress={() => toggleCardContent(item.id_log)}>
+          <Card.Content>
+            <Text style={styles.orderText}><Text style={styles.label}>Máquina ID:</Text> {item.id_maquina}</Text>
+            <Text style={styles.orderText}><Text style={styles.label}>Criado Em:</Text> {new Date(item.criado_em).toLocaleDateString()}</Text>
+
+            {isExpanded && (
+              <View style={styles.detailsContainer}>
+                <Text style={styles.detailText}><Text style={styles.label}>ID do Log:</Text> {item.id_log}</Text>
+                <Text style={styles.detailText}><Text style={styles.label}>Descrição:</Text> {item.descricao}</Text>
+                <Text style={styles.detailText}><Text style={styles.label}>Operador ID:</Text> {item.id_operador}</Text>
+                <Text style={styles.detailText}><Text style={styles.label}>Criado Em:</Text> {new Date(item.criado_em).toLocaleString()}</Text>
+              </View>
+            )}
+          </Card.Content>
+        </TouchableOpacity>
+      </Card>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -68,8 +94,9 @@ const HomeTecnicoScreen = () => {
         <Image source={require('../assets/logo.png')} style={styles.logo} />
         <Text style={styles.monitoringText}>Ferramenta de monitoramento técnico</Text>
         
-        {/* Placeholder para dados vazios */}
-        {serviceOrders.length === 0 ? (
+        {loading ? (
+          <ActivityIndicator size="large" color="#000" />
+        ) : serviceOrders.length === 0 ? (
           <Text style={styles.noDataText}>Nenhum pedido de serviço disponível.</Text>
         ) : (
           <FlatList
@@ -109,12 +136,12 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
   },
-  logo: {
+  logo: { 
     width: 762,
     height: 217,
     marginTop: 60,
   },
-  monitoringText: {
+  monitoringText: {// ferramenta... é o texto que aparece abaixo do logo
     fontSize: 40,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -122,23 +149,33 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
     marginBottom: 20,
   },
-  orderContainer: {
+  card: {
     backgroundColor: '#fff',
-    borderRadius: 8, 
+    borderRadius: 8,
     marginVertical: 10,
     width: '100%',
-    shadowColor: '#000',
-
-    width: 450,
+    elevation: 3,
+    paddingHorizontal: 100,
+    paddingVertical: 10,
   },
   orderText: {
-    fontSize: 25,
+    fontSize: 30,
     color: '#333',
-    marginLeft: 10,
-    marginRight: 10,
   },
   label: {
     fontWeight: 'bold',
+    color: '#FEC601', 
+  },
+  detailsContainer: {
+    marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+  },
+  detailText: {
+    fontSize: 25,
+    color: '#333',
   },
   noDataText: {
     fontSize: 18,
