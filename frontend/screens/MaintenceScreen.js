@@ -4,6 +4,7 @@ import { Card, Title, Paragraph } from 'react-native-paper';
 import { useUser } from '../contexts/UserContext'; 
 import { api } from '../api/api';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import { useFocusEffect } from '@react-navigation/native'; 
 
 const TechnicianTasksScreen = () => {
   const { user } = useUser(); 
@@ -11,37 +12,38 @@ const TechnicianTasksScreen = () => {
   const [serviceOrders, setServiceOrders] = useState([]);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
 
-  useEffect(() => {
-    const fetchServiceOrders = async () => {
-      if (!user?.id_tecnico) {
-        Alert.alert('Erro', 'Técnico não autenticado. Por favor, faça login novamente.');
-        return;
-      }
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchServiceOrders = async () => {
+        if (!user?.id_tecnico) {
+          Alert.alert('Erro', 'Técnico não autenticado. Por favor, faça login novamente.');
+          return;
+        }
 
-      try {
-        setLoading(true);
-        const response = await api.get(`/jobsbyid/${user.id_tecnico}`); 
-        setServiceOrders(response.data.service_order); 
-      } catch (error) {
-        console.error(error);
-        Alert.alert('Erro', 'Erro ao buscar as ordens de serviço.');
-      } finally {
-        setLoading(false);
-      }
-    };
+        try {
+          setLoading(true);
+          const response = await api.get(`/jobsbyid/${user.id_tecnico}`); 
+          setServiceOrders(response.data.service_order); 
+        } catch (error) {
+          console.error(error);
+          Alert.alert('Erro', 'Erro ao buscar as ordens de serviço.');
+        } finally {
+          setLoading(false);
+        }
+      };
 
-    fetchServiceOrders();
-  }, [user?.id_tecnico]);
-
+      fetchServiceOrders();
+    }, [user?.id_tecnico]) // Dependência para atualizar quando o id do técnico mudar
+  );
     //verificação de cards, abrir um de cada vez
     const toggleCard = (id) => {
       //if ID clicado for o mesmo do atualmente expandido, fecha-o; caso contrário, abre o novo
       setExpandedOrderId((prev) => (prev === id ? null : id));
-    };
-  
-    const renderServiceOrder = ({ item }) => {
-      const isExpanded = expandedOrderId === item.id_manutencao; // Verifica se o card está expandido
-  
+  };
+
+  const renderServiceOrder = ({ item }) => {
+    const isExpanded = expandedOrderId === item.id_manutencao; 
+
     return (
       <Card style={styles.card}>
         <TouchableOpacity onPress={() => toggleCard(item.id_manutencao)}>

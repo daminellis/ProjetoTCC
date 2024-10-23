@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, FlatList, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useUser } from '../contexts/UserContext';
 import { api } from '../api/api';
 import { Card } from 'react-native-paper';
+import { useFocusEffect } from '@react-navigation/native'; // Importando useFocusEffect
 
 const HomeTecnicoScreen = () => {
   const { user } = useUser();
@@ -10,50 +11,56 @@ const HomeTecnicoScreen = () => {
   const [serviceOrders, setServiceOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchUserName = async () => {
-      if (user?.id_tecnico) {
+  // Efeito para buscar o nome do usuário
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchUserName = async () => {
+        if (user?.id_tecnico) {
+          try {
+            const response = await api.get(`/users/tecnicos/${user.id_tecnico}`);
+            if (response.data.success) {
+              setUserName(response.data.user.nome);
+            } else {
+              console.error(response.data.error);
+            }
+          } catch (error) {
+            console.error("Error fetching user data", error);
+            Alert.alert("Erro", "Erro ao buscar dados do usuário.");
+          }
+        }
+      };
+      fetchUserName();
+    }, [user]) // Dependência para atualizar quando o usuário muda
+  );
+
+  // Efeito para buscar ordens de serviço
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchServiceOrders = async () => {
+        setLoading(true);
         try {
-          const response = await api.get(`/users/tecnicos/${user.id_tecnico}`);
-          if (response.data.success) {
-            setUserName(response.data.user.nome);
+          const response = await api.get(`/allserviceorders`);
+          if (response.data && response.data.service_orders) {
+            if (Array.isArray(response.data.service_orders)) {
+              setServiceOrders(response.data.service_orders);
+            } else {
+              console.error("service_orders não é um array:", response.data.service_orders);
+              Alert.alert("Erro", "Dados inesperados recebidos da API.");
+            }
           } else {
-            console.error(response.data.error);
+            console.error("Resposta inesperada da API:", response.data);
+            Alert.alert("Erro", "Resposta inesperada da API.");
           }
         } catch (error) {
-          console.error("Error fetching user data", error);
-          Alert.alert("Erro", "Erro ao buscar dados do usuário.");
+          console.error("Error fetching service orders", error);
+          Alert.alert("Erro", "Erro ao buscar ordens de serviço.");
+        } finally {
+          setLoading(false);
         }
-      }
-    };
-    fetchUserName();
-  }, [user]);
-
-  useEffect(() => {
-    const fetchServiceOrders = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get(`/allserviceorders`);
-        if (response.data && response.data.service_orders) {
-          if (Array.isArray(response.data.service_orders)) {
-            setServiceOrders(response.data.service_orders);
-          } else {
-            console.error("service_orders não é um array:", response.data.service_orders);
-            Alert.alert("Erro", "Dados inesperados recebidos da API.");
-          }
-        } else {
-          console.error("Resposta inesperada da API:", response.data);
-          Alert.alert("Erro", "Resposta inesperada da API.");
-        }
-      } catch (error) {
-        console.error("Error fetching service orders", error);
-        Alert.alert("Erro", "Erro ao buscar ordens de serviço.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchServiceOrders();
-  }, []);
+      };
+      fetchServiceOrders();
+    }, []) // Sem dependências, pois você sempre quer buscar ao focar na tela
+  );
 
   const [expandedOrderId, setExpandedOrderId] = useState(null);
 
@@ -141,7 +148,7 @@ const styles = StyleSheet.create({
     height: 217,
     marginTop: 60,
   },
-  monitoringText: {// ferramenta... é o texto que aparece abaixo do logo
+  monitoringText: {
     fontSize: 40,
     fontWeight: 'bold',
     textAlign: 'center',
