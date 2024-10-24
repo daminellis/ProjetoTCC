@@ -20,8 +20,21 @@ Arquivo fonte do projeto [Modelo Físico](https://dbdiagram.io/d/tcc-66bb96178b4
 
 ![image](https://github.com/user-attachments/assets/7ff13a71-79ee-44f5-b44d-652916ef9975)
 
+
+# Problemas do robson
+
+- criar tabela com problemas especificos (eliminar a necessidade do operador digitar)
+- operador ira dizer as gravidade do problema e o problema já escrito
+- aviso abertura de chamado (indepente urgencia)
+- tecnico chegou na maquina, avisar quando iniciar, avisar quando acabar (auto), descrever problema, solicitar compra de algo
+- dia que o chamado foi fechado
+- gerente comanda todos os cruds do projeto
+- ele quem dita quem ira fazer cada trabalho ou quem é o responsavel por cada maquina (if receber qualquer aviso de maquina se nao estiver em trabalho, alert)
+
+
 ## Licença
 
 Este repositório está licenciado sob a licença Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0). Você pode visualizar e compartilhar o material, mas não pode usá-lo para fins comerciais, nem modificar ou distribuir derivados.
 
 Para mais detalhes, veja o arquivo [LICENSE](./LICENSE).
+
