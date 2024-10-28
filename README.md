@@ -23,8 +23,8 @@ Arquivo fonte do projeto [Modelo Físico](https://dbdiagram.io/d/tcc-66bb96178b4
 
 # Problemas do robson
 
-- criar tabela com problemas especificos (eliminar a necessidade do operador digitar)
-- operador ira dizer as gravidade do problema e o problema já escrito
+- criar tabela com problemas especificos (eliminar a necessidade do operador digitar)✔️
+- operador ira dizer as gravidade do problema e o problema já escrito✔️
 - aviso abertura de chamado (indepente urgencia)
 - tecnico chegou na maquina, avisar quando iniciar, avisar quando acabar (auto), descrever problema, solicitar compra de algo
 - dia que o chamado foi fechado

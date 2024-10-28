@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, Alert, ActivityIndicator, TouchableOpacity, ScrollView} from 'react-native';
 import { useUser } from '../contexts/UserContext';
 import { api } from '../api/api';
 import { List, RadioButton } from 'react-native-paper';
@@ -26,7 +26,6 @@ const WarningScreen = () => {
 
         const warningsResponse = await api.get('/getwarning');
         if (warningsResponse.data.success) {
-          console.log('Warnings recebidos:', warningsResponse.data.warnings); 
           setWarnings(warningsResponse.data.warnings);
         } else {
           Alert.alert('Erro', 'Nenhum aviso encontrado.');
@@ -40,9 +39,6 @@ const WarningScreen = () => {
     fetchWarnings();
   }, [user?.id_operador]);
 
-  useEffect(() => {
-    console.log('Warnings atualizados:', warnings); 
-  }, [warnings]);
 
   const handleSaveWarning = async () => {
     if (!selectedWarning) {
@@ -86,29 +82,35 @@ const WarningScreen = () => {
           title={selectedWarning ? selectedWarning.problema : 'Selecione um aviso'} 
           expanded={expanded}
           onPress={() => setExpanded(!expanded)}
+          titleStyle={styles.accordionTitle}
         >
-          {warnings.length > 0 ? (
-            warnings.map((warning) => (
-              <List.Item
-                key={warning.id_problema}
-                title={warning.problema} 
-                onPress={() => {
-                  setSelectedWarning(warning);
-                  setExpanded(false); 
-                }}
-              />
-            ))
-          ) : (
-            <Text style={styles.noWarningsText}>Nenhum aviso encontrado.</Text>
-          )}
+          <ScrollView style={styles.scrollView}> 
+            {warnings.length > 0 ? (
+              warnings.map((warning) => (
+                <List.Item
+                  key={warning.id_problema}
+                  title={warning.problema} 
+                  onPress={() => {
+                    setSelectedWarning(warning);
+                    setExpanded(false); 
+                  }}
+                  titleStyle={styles.warningTitle}
+                />
+              ))
+            ) : (
+              <Text style={styles.noWarningsText}>Nenhum aviso encontrado.</Text>
+            )}
+          </ScrollView>
         </List.Accordion>
 
         <Text style={styles.label}>Gravidade:</Text>
         <RadioButton.Group onValueChange={value => setGravidade(parseInt(value))} value={gravidade.toString()}>
           {[...Array(10).keys()].map(i => (
             <View key={i} style={styles.checkboxContainer}>
-              <RadioButton value={(i + 1).toString()} />
-              <Text>{i + 1}</Text>
+              <RadioButton 
+                value={(i + 1).toString()} 
+              />
+              <Text style={styles.checkboxText}>{i + 1}</Text>
             </View>
           ))}
         </RadioButton.Group>
@@ -148,13 +150,30 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   label: {
-    fontSize: 18,
+    fontSize: 30,
     marginTop: 20,
     marginBottom: 10,
+  },
+  accordionTitle: {
+    fontSize: 30,
+    color: 'black',
+  },
+  warningTitle: {
+    padding: 10,
+    fontSize: 25  ,
+    color: 'black',
+  },
+  scrollView: {
+    maxHeight: 500,
   },
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginVertical: 5,
+  },
+  checkboxText: {
+    fontSize: 40,
+    color: 'white',
   },
   button: {
     backgroundColor: '#FEC601',
