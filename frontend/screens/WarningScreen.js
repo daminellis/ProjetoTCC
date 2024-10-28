@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, StyleSheet, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text, Alert, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useUser } from '../contexts/UserContext';
 import { api } from '../api/api';
+import { List, RadioButton } from 'react-native-paper';
 
 const WarningScreen = () => {
   const { user } = useUser();
-  const [descricao, setDescricao] = useState('');
+  const [warnings, setWarnings] = useState([]); 
+  const [selectedWarning, setSelectedWarning] = useState(null); 
   const [idMaquina, setIdMaquina] = useState(null);
-  const [loading, setLoading] = useState(false); // Para o indicador de carregamento
-
+  const [gravidade, setGravidade] = useState(1); 
+  const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState(false); 
+  
   useEffect(() => {
-    const fetchMaquina = async () => {
+    const fetchWarnings = async () => {
       try {
         if (!user?.id_operador) {
           Alert.alert('Operador não autenticado', 'Por favor, faça login novamente.');
@@ -19,18 +23,30 @@ const WarningScreen = () => {
 
         const response = await api.get(`/monitores/${user.id_operador}`);
         setIdMaquina(response.data.id_maquina);
+
+        const warningsResponse = await api.get('/getwarning');
+        if (warningsResponse.data.success) {
+          console.log('Warnings recebidos:', warningsResponse.data.warnings); 
+          setWarnings(warningsResponse.data.warnings);
+        } else {
+          Alert.alert('Erro', 'Nenhum aviso encontrado.');
+        }
       } catch (error) {
         console.error(error);
-        Alert.alert('Erro', 'Erro ao buscar máquina associada.');
+        Alert.alert('Erro', 'Erro ao buscar avisos.');
       }
     };
 
-    fetchMaquina();
+    fetchWarnings();
   }, [user?.id_operador]);
 
+  useEffect(() => {
+    console.log('Warnings atualizados:', warnings); 
+  }, [warnings]);
+
   const handleSaveWarning = async () => {
-    if (!descricao.trim()) {
-      Alert.alert('Erro', 'A descrição não pode estar vazia.');
+    if (!selectedWarning) {
+      Alert.alert('Erro', 'Por favor, selecione um aviso.');
       return;
     }
 
@@ -40,21 +56,23 @@ const WarningScreen = () => {
         return;
       }
 
-      setLoading(true); 
-      await api.post(`/warning`, { 
-        id_operador: user.id_operador, 
+      setLoading(true);
+      await api.post(`/warning`, {
+        id_operador: user.id_operador,
         id_maquina: idMaquina,
-        descricao,
+        descricao: selectedWarning.problema, 
+        gravidade,
         criado_em: new Date().toISOString(),
       });
-      
+
       Alert.alert('Sucesso', 'Aviso salvo com sucesso!');
-      setDescricao(''); // Limpa o campo de texto
+      setSelectedWarning(null);
+      setExpanded(false);
     } catch (error) {
       console.error(error);
       Alert.alert('Erro', 'Erro ao salvar aviso.');
     } finally {
-      setLoading(false); // Finaliza o carregamento
+      setLoading(false);
     }
   };
 
@@ -64,13 +82,37 @@ const WarningScreen = () => {
         <Text style={styles.title}>Registrar Aviso</Text>
       </View>
       <View style={styles.content}>
-        <TextInput
-          style={styles.input}
-          placeholder="Descrição do aviso"
-          value={descricao}
-          onChangeText={setDescricao}
-          multiline
-        />
+        <List.Accordion
+          title={selectedWarning ? selectedWarning.problema : 'Selecione um aviso'} 
+          expanded={expanded}
+          onPress={() => setExpanded(!expanded)}
+        >
+          {warnings.length > 0 ? (
+            warnings.map((warning) => (
+              <List.Item
+                key={warning.id_problema}
+                title={warning.problema} 
+                onPress={() => {
+                  setSelectedWarning(warning);
+                  setExpanded(false); 
+                }}
+              />
+            ))
+          ) : (
+            <Text style={styles.noWarningsText}>Nenhum aviso encontrado.</Text>
+          )}
+        </List.Accordion>
+
+        <Text style={styles.label}>Gravidade:</Text>
+        <RadioButton.Group onValueChange={value => setGravidade(parseInt(value))} value={gravidade.toString()}>
+          {[...Array(10).keys()].map(i => (
+            <View key={i} style={styles.checkboxContainer}>
+              <RadioButton value={(i + 1).toString()} />
+              <Text>{i + 1}</Text>
+            </View>
+          ))}
+        </RadioButton.Group>
+
         <TouchableOpacity style={styles.button} onPress={handleSaveWarning} disabled={loading}>
           {loading ? (
             <ActivityIndicator size="small" color="#000" />
@@ -105,16 +147,14 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 30,
     padding: 20,
   },
-  input: {
-    height: 200,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 10,
-    backgroundColor: '#fff',
+  label: {
     fontSize: 18,
-    textAlignVertical: 'top',
-    marginBottom: 20,
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   button: {
     backgroundColor: '#FEC601',
@@ -127,6 +167,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: 'black',
+  },
+  noWarningsText: {
+    padding: 10,
+    textAlign: 'center',
+    color: 'white',
   },
 });
 

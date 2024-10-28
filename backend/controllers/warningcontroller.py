@@ -26,6 +26,30 @@ def get_maquina(id_operador):
         print(f"Erro ao buscar máquina: {error}")
         return jsonify(message="Erro ao buscar máquina"), 500
 
+def get_warnings():
+    try:
+        with db.engine.connect() as connection:
+            sql = text('SELECT * FROM problemas')
+            result = connection.execute(sql)
+            problemas = result.fetchall()
+
+        problemas_lista = [dict(row._mapping) for row in problemas]
+
+        if problemas_lista:
+            return jsonify({
+                "success": True,
+                "warnings": problemas_lista
+            }), 200
+        else:
+            return jsonify({
+                "success": False,
+                "error": "Avisos não encontrados"
+            }), 404
+
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        return jsonify({'error': error}), 500
+
 def save_warning():
     global id_maquina_global
 
@@ -34,6 +58,7 @@ def save_warning():
         id_operador = data.get('id_operador')
         descricao = data.get('descricao')
         criado_em = datetime.datetime.now().isoformat()
+        gravidade = data.get('gravidade')
 
         if id_maquina_global is None:
             response = get_maquina(id_operador)
@@ -41,16 +66,17 @@ def save_warning():
 
         with db.engine.connect() as connection:
             sql = text("""
-                INSERT INTO logs (id_operador, id_maquina, descricao, criado_em) 
-                VALUES (:id_operador, :id_maquina, :descricao, :criado_em)
+                INSERT INTO logs (id_operador, id_maquina, descricao, criado_em, gravidade) 
+                VALUES (:id_operador, :id_maquina, :descricao, :criado_em, :gravidade)
             """)
             connection.execute(sql, {
                 'id_operador': id_operador,
                 'id_maquina': id_maquina_global,
                 'descricao': descricao,
-                'criado_em': criado_em
+                'criado_em': criado_em,
+                'gravidade': gravidade
             })
-            connection.commit() 
+            connection.commit()
 
         return jsonify({
             "success": True,
@@ -59,8 +85,8 @@ def save_warning():
 
     except SQLAlchemyError as e:
         error = str(e.__dict__['orig'])
-        print(f"Erro ao salvar aviso: {error}")  # Log do erro
+        print(f"Erro ao salvar aviso: {error}")
         return jsonify({'error': error}), 500
     except Exception as e:
-        print(f"Erro inesperado: {str(e)}")  # Log do erro
+        print(f"Erro inesperado: {str(e)}")
         return jsonify({'error': str(e)}), 500

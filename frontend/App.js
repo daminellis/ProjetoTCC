@@ -62,10 +62,12 @@ const App = () => {
 
 const DrawerNavigatorOperador = () => {
   return (
-    <Drawer.Navigator drawerContent={(props) => <CustomDrawerContentOperador {...props} />}>
-      <Drawer.Screen name="Home" component={HomeScreen} />
-      <Drawer.Screen name="Avisos" component={WarningScreen} />
-    </Drawer.Navigator>
+    <PaperProvider>
+      <Drawer.Navigator drawerContent={(props) => <CustomDrawerContentOperador {...props} />}>
+        <Drawer.Screen name="Home" component={HomeScreen} />
+        <Drawer.Screen name="Avisos" component={WarningScreen} />
+      </Drawer.Navigator>
+    </PaperProvider>
   );
 };
 
