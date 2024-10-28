@@ -53,7 +53,6 @@ const handleLogin = () => {
 
   if (isAdmin) {
     // Se for um administrador, navega para a tela de administrador
-    setUser({ id_operador }); // Define o usuário como um administrador
     const nextScreen = 'DrawerAdmin'; // Navega para a tela do administrador
     navigation.navigate(nextScreen);
     Alert.alert('Login bem-sucedido', `Bem-vindo, Administrador ${id_operador}!`);
