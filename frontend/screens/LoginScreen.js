@@ -4,6 +4,12 @@ import { useFocusEffect } from '@react-navigation/native';
 import React, { useState, useCallback } from 'react';
 import { api } from '../api/api';
 
+// Pares de (id_maquina, id_operador) que representam administradores
+const ADMIN_CREDENTIALS = [
+  { id_maquina: 'maquina1', id_operador: 'admin1' }, // Substitua com os IDs reais
+  { id_maquina: 'maquina2', id_operador: 'admin2' }, // Substitua com os IDs reais
+];
+
 const LoginScreen = ({ navigation }) => {
   const [id_maquina, setId_maquina] = useState('');
   const [id_operador, setId_operador] = useState('');
@@ -26,22 +32,35 @@ const LoginScreen = ({ navigation }) => {
     }, [])
   );
 
-  const handleLogin = () => {
-    if (isLoading) return;
+const handleLogin = () => {
+  if (isLoading) return;
 
-    // Validação de entradas
-    if (isTecnico && (!id_tecnico || !senha)) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos para o login de Técnico.');
-      return;
-    }
+  // Validação de entradas
+  if (isTecnico && (!id_tecnico || !senha)) {
+    Alert.alert('Erro', 'Por favor, preencha todos os campos para o login de Técnico.');
+    return;
+  }
 
-    if (!isTecnico && (!id_maquina || !id_operador)) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos para o login de Operador.');
-      return;
-    }
+  if (!isTecnico && (!id_maquina || !id_operador)) {
+    Alert.alert('Erro', 'Por favor, preencha todos os campos para o login de Operador.');
+    return;
+  }
 
+  // Verifica se o par (id_maquina, id_operador) corresponde a um administrador
+  const isAdmin = ADMIN_CREDENTIALS.some(
+    admin => admin.id_maquina === id_maquina && admin.id_operador === id_operador
+  );
+
+  if (isAdmin) {
+    // Se for um administrador, navega para a tela de administrador
+    setUser({ id_operador }); // Define o usuário como um administrador
+    const nextScreen = 'DrawerAdmin'; // Navega para a tela do administrador
+    navigation.navigate(nextScreen);
+    Alert.alert('Login bem-sucedido', `Bem-vindo, Administrador ${id_operador}!`);
+    return;
+  } else {
     setIsLoading(true);
-
+    
     const endpoint = isTecnico ? '/logintecnicos' : '/login';
     const payload = isTecnico ? { id_tecnico, senha } : { id_maquina, id_operador };
 
@@ -53,7 +72,7 @@ const LoginScreen = ({ navigation }) => {
           setUser(user);
           const nextScreen = isTecnico ? 'DrawerTecnico' : 'Drawer';
           navigation.navigate(nextScreen);
-          Alert.alert('Login bem-sucedido', `Bem-vindo, ${isTecnico ? 'Técnico' : 'Operador'} ${response.data.user.id_tecnico || response.data.user.id_operador}!`);
+          Alert.alert('Login bem-sucedido', `Bem-vindo, ${isTecnico ? 'Técnico' : 'Operador'} ${response.data.user.id_operador || response.data.user.id_tecnico}!`);
         } else {
           Alert.alert('Erro de login', response.data.error);
         }
@@ -63,8 +82,9 @@ const LoginScreen = ({ navigation }) => {
         console.error("Erro no login:", error);
         Alert.alert('Erro', 'Ocorreu um erro ao tentar fazer login.');
       });
-  };
-
+  }
+};
+  
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -122,7 +142,7 @@ const LoginScreen = ({ navigation }) => {
             />
             <TextInput
               style={styles.input}
-              placeholder="Senha Operador"
+              placeholder="ID Operador"
               value={id_operador}
               onChangeText={setId_operador}
               secureTextEntry
