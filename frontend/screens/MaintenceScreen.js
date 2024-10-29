@@ -239,38 +239,20 @@ const TechnicianTasksScreen = () => {
             style={styles.input}
             keyboardType="numeric"
           />
-          <TextInput
-            label="Status"
-            value={editedStatus}
-            onChangeText={setEditedStatus}
-            style={styles.input}
-          />
-          <TextInput
-            label="Data de Início"
-            value={editedStartDate}
-            onChangeText={setEditedStartDate}
-            style={styles.input}
-            placeholder="AAAA-MM-DD HH:mm"
-          />
-          <TextInput
-            label="Data de Término"
-            value={editedEndDate}
-            onChangeText={setEditedEndDate}
-            style={styles.input}
-            placeholder="AAAA-MM-DD HH:mm"
-          />
-          <Button mode="contained" onPress={handleSave} style={styles.saveButton}>
-            Salvar
-          </Button>
-          <Button mode="contained" onPress={startService} style={styles.startButton}>
-            Iniciar Serviço
-          </Button>
-          <Button mode="contained" onPress={finishService} style={styles.finishButton}>
-            Finalizar Serviço
-          </Button>
-          <Button onPress={hideModal} style={styles.cancelButton}>
-            Cancelar
-          </Button>
+          <View style={styles.buttonContainer}>
+            <Button mode="contained" onPress={handleSave} style={styles.saveButton} labelStyle={styles.buttonText}>
+              Salvar
+            </Button>
+            <Button mode="contained" onPress={startService} style={styles.startButton} labelStyle={styles.buttonText}>
+              Iniciar Serviço
+            </Button>
+            <Button mode="contained" onPress={finishService} style={styles.finishButton} labelStyle={styles.buttonText}>
+              Finalizar Serviço
+            </Button>
+            <Button onPress={hideModal} style={styles.cancelButton} labelStyle={styles.buttonText}>
+              Cancelar
+            </Button>
+          </View>
         </Modal>
       </Portal>
     </View>
@@ -344,29 +326,60 @@ const styles = StyleSheet.create({
     padding: 20,
     marginHorizontal: 20,
     borderRadius: 10,
+    width: '80%',
+    height: 'auto',
+    alignSelf: 'center',
   },
   modalTitle: {
-    fontSize: 25,
+    fontSize: 30,
     marginBottom: 15,
     textAlign: 'center',
   },
   input: {
     marginBottom: 15,
     backgroundColor: 'white',
+    borderWidth: 2,
+    borderColor: '#FEC601',
+    borderRadius: 5,
+    fontSize: 25,
+    padding: 10,
+  },
+  buttonContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  buttonText: {
+    fontSize: 25,
+    color: 'white',
+    paddingVertical: 5,
   },
   saveButton: {
     marginBottom: 10,
+    height: 50,
+    width: 280,
+    justifyContent: 'center',
+    backgroundColor: '#FEC601',
   },
   startButton: {
     backgroundColor: '#4CAF50', 
     marginBottom: 10,
+    height: 50,
+    width: 280,
+    justifyContent: 'center',
   },
   finishButton: {
     backgroundColor: '#FF5722', 
     marginBottom: 10,
+    height: 50,
+    width: 280,
+    justifyContent: 'center',
   },
   cancelButton: {
     backgroundColor: 'gray',
+    height: 50,
+    width: 280,
+    justifyContent: 'center',
   },
   cardHeader: {
     flexDirection: 'row',
