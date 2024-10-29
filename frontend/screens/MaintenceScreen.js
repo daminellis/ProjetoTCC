@@ -1,16 +1,24 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, Alert, ActivityIndicator, FlatList } from 'react-native';
-import { Card, Title, Paragraph } from 'react-native-paper';
+import { View, StyleSheet, Text, Alert, ActivityIndicator, FlatList, TextInput } from 'react-native';
+import { Card, Title, Paragraph, IconButton, Modal, Portal, Button } from 'react-native-paper';
 import { useUser } from '../contexts/UserContext'; 
 import { api } from '../api/api';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useFocusEffect } from '@react-navigation/native'; 
 
-const TechnicianTasksScreen = () => {
+const TechnicianTasksScreen = () => {  
   const { user } = useUser(); 
   const [loading, setLoading] = useState(false);
   const [serviceOrders, setServiceOrders] = useState([]);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
+  
+  const [visible, setVisible] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [editedDescription, setEditedDescription] = useState('');
+  const [editedCost, setEditedCost] = useState('');
+  const [editedStatus, setEditedStatus] = useState('');
+  const [editedStartDate, setEditedStartDate] = useState('');
+  const [editedEndDate, setEditedEndDate] = useState('');
 
   useFocusEffect(
     React.useCallback(() => {
@@ -23,6 +31,11 @@ const TechnicianTasksScreen = () => {
         try {
           setLoading(true);
           const response = await api.get(`/jobsbyid/${user.id_tecnico}`); 
+          
+          if (response.data.service_order.length === 0){
+            Alert.alert('Aviso','Nenhuma ordem de serviço foi encontrada para este técnico');
+          }
+
           setServiceOrders(response.data.service_order); 
         } catch (error) {
           console.error(error);
@@ -33,10 +46,113 @@ const TechnicianTasksScreen = () => {
       };
 
       fetchServiceOrders();
-    }, [user?.id_tecnico]) //verificacao do id do técnico 
+    }, [user?.id_tecnico])
   );
 
-  //verificação de cards, abrir um de cada vez
+  const handleEditOrder = (order) => {
+    setSelectedOrder(order);
+    setEditedDescription(order.descricao);
+    setEditedCost(order.custo_de_peca.toString());
+    setEditedStatus(order.status);
+    setEditedStartDate(new Date(order.inicio_da_manutencao).toISOString().slice(0, 16)); // Formato YYYY-MM-DDTHH:MM
+    setEditedEndDate(new Date(order.termino_da_manutencao).toISOString().slice(0, 16)); // Formato YYYY-MM-DDTHH:MM
+    setVisible(true);
+  };
+
+  const hideModal = () => {
+    setVisible(false);
+    setSelectedOrder(null);
+  };
+
+  const handleSave = async () => {
+    if (!selectedOrder) return;
+
+    try {
+      const updatedOrder = {
+        descricao: editedDescription,
+        custo_de_peca: parseFloat(editedCost),
+        status: editedStatus,
+        inicio_da_manutencao: editedStartDate,
+        termino_da_manutencao: editedEndDate,
+      };
+
+      const response = await api.put(`/editjobs/${selectedOrder.id_manutencao}`, updatedOrder);
+
+      if (response.status === 200) {
+        setServiceOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.id_manutencao === selectedOrder.id_manutencao
+              ? { ...order, ...updatedOrder }
+              : order
+          )
+        );
+
+        Alert.alert('Sucesso', 'Ordem de serviço atualizada!');
+        hideModal();
+      } else {
+        Alert.alert('Erro', 'Erro ao atualizar a ordem de serviço.');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro', 'Erro ao salvar as alterações.');
+    }
+  };
+
+  const startService = async () => {
+    if (!selectedOrder) return;
+  
+    const updatedOrder = {
+      ...selectedOrder,
+      status: 'Em andamento',  // Atualiza o status para "Em andamento"
+      inicio_da_manutencao: new Date().toISOString().slice(0, 19).replace('T', ' '), // Formato: YYYY-MM-DD HH:MM:SS
+    };
+  
+    try {
+      const response = await api.put(`/editjobs/${selectedOrder.id_manutencao}`, updatedOrder);
+      if (response.status === 200) {
+        setServiceOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.id_manutencao === selectedOrder.id_manutencao
+              ? { ...order, ...updatedOrder }
+              : order
+          )
+        );
+        Alert.alert('Sucesso', 'Serviço iniciado!');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro', 'Erro ao iniciar o serviço.');
+    }
+  };
+
+    
+  const finishService = async () => {
+    if (!selectedOrder) return;
+
+    const updatedOrder = {
+      ...selectedOrder,
+      status: 'Finalizado',  // Atualiza o status para "Finalizado"
+      termino_da_manutencao: new Date().toISOString().slice(0, 19).replace('T', ' '), // Formato: YYYY-MM-DD HH:MM:SS
+    };
+
+    try {
+      const response = await api.put(`/editjobs/${selectedOrder.id_manutencao}`, updatedOrder);
+      if (response.status === 200) {
+        setServiceOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.id_manutencao === selectedOrder.id_manutencao
+              ? { ...order, ...updatedOrder }
+              : order
+          )
+        );
+        Alert.alert('Sucesso', 'Serviço finalizado!');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro', 'Erro ao finalizar o serviço.');
+    }
+  };
+
   const toggleCard = (id) => {
     setExpandedOrderId((prev) => (prev === id ? null : id));
   };
@@ -46,16 +162,24 @@ const TechnicianTasksScreen = () => {
 
     return (
       <Card style={styles.card}>
-        <TouchableOpacity onPress={() => toggleCard(item.id_manutencao)}>
-          <Card.Content>
-            <Text style={styles.cardActionText}>
-              <Text style={styles.label}>Data:</Text> {new Date(item.inicio_da_manutencao).toLocaleDateString('pt-BR')} {/* Formatação dd/mm/yyyy */}
-            </Text>
-            <Text style={styles.cardActionText}>
-              <Text style={styles.label}>ID Máquina:</Text> {item.id_maquina}
-            </Text>
-          </Card.Content>
-        </TouchableOpacity>
+        <View style={styles.cardHeader}>
+          <TouchableOpacity onPress={() => toggleCard(item.id_manutencao)} style={{ flex: 1 }}>
+            <Card.Content>
+              <Text style={styles.cardActionText}>
+                <Text style={styles.label}>Data:</Text> {new Date(item.inicio_da_manutencao).toLocaleDateString('pt-BR')}
+              </Text>
+              <Text style={styles.cardActionText}>
+                <Text style={styles.label}>ID Máquina:</Text> {item.id_maquina}
+              </Text>
+            </Card.Content>
+          </TouchableOpacity>
+          <IconButton
+            icon="pencil"
+            size={50}
+            color="#FEC601"
+            onPress={() => handleEditOrder(item)}
+          />
+        </View>
 
         {isExpanded && (
           <Card.Content style={styles.detailsContainer}>
@@ -70,10 +194,10 @@ const TechnicianTasksScreen = () => {
               <Text style={styles.label}>Status:</Text> {item.status}
             </Paragraph>
             <Paragraph style={styles.detailText}>
-              <Text style={styles.label}>Início:</Text> {new Date(item.inicio_da_manutencao).toLocaleString('pt-BR')} {/* Formatação dd/mm/yyyy HH:mm:ss */}
+              <Text style={styles.label}>Início:</Text> {new Date(item.inicio_da_manutencao).toLocaleString('pt-BR')}
             </Paragraph>
             <Paragraph style={styles.detailText}>
-              <Text style={styles.label}>Término:</Text> {new Date(item.termino_da_manutencao).toLocaleString('pt-BR')} {/* Formatação dd/mm/yyyy HH:mm:ss */}
+              <Text style={styles.label}>Término:</Text> {new Date(item.termino_da_manutencao).toLocaleString('pt-BR')}
             </Paragraph>
           </Card.Content>
         )}
@@ -98,6 +222,57 @@ const TechnicianTasksScreen = () => {
           />
         )}
       </View>
+
+      <Portal>
+        <Modal visible={visible} onDismiss={hideModal} contentContainerStyle={styles.modalContainer}>
+          <Title style={styles.modalTitle}>Editar Ordem de Serviço</Title>
+          <TextInput
+            label="Descrição"
+            value={editedDescription}
+            onChangeText={setEditedDescription}
+            style={styles.input}
+          />
+          <TextInput
+            label="Custo de Peça"
+            value={editedCost}
+            onChangeText={setEditedCost}
+            style={styles.input}
+            keyboardType="numeric"
+          />
+          <TextInput
+            label="Status"
+            value={editedStatus}
+            onChangeText={setEditedStatus}
+            style={styles.input}
+          />
+          <TextInput
+            label="Data de Início"
+            value={editedStartDate}
+            onChangeText={setEditedStartDate}
+            style={styles.input}
+            placeholder="AAAA-MM-DD HH:mm"
+          />
+          <TextInput
+            label="Data de Término"
+            value={editedEndDate}
+            onChangeText={setEditedEndDate}
+            style={styles.input}
+            placeholder="AAAA-MM-DD HH:mm"
+          />
+          <Button mode="contained" onPress={handleSave} style={styles.saveButton}>
+            Salvar
+          </Button>
+          <Button mode="contained" onPress={startService} style={styles.startButton}>
+            Iniciar Serviço
+          </Button>
+          <Button mode="contained" onPress={finishService} style={styles.finishButton}>
+            Finalizar Serviço
+          </Button>
+          <Button onPress={hideModal} style={styles.cancelButton}>
+            Cancelar
+          </Button>
+        </Modal>
+      </Portal>
     </View>
   );
 };
@@ -163,6 +338,39 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: 'white',
     fontSize: 30,
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    marginHorizontal: 20,
+    borderRadius: 10,
+  },
+  modalTitle: {
+    fontSize: 25,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  input: {
+    marginBottom: 15,
+    backgroundColor: 'white',
+  },
+  saveButton: {
+    marginBottom: 10,
+  },
+  startButton: {
+    backgroundColor: '#4CAF50', 
+    marginBottom: 10,
+  },
+  finishButton: {
+    backgroundColor: '#FF5722', 
+    marginBottom: 10,
+  },
+  cancelButton: {
+    backgroundColor: 'gray',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
 

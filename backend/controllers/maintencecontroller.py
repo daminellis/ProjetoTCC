@@ -1,4 +1,4 @@
-from flask import jsonify
+from flask import jsonify, request
 from database.db import db
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql import text
@@ -42,9 +42,40 @@ def get_jobs_by_id(id_tecnico):
             }), 200
         else:
             return jsonify({
-                "success": False,
-                "error": "Ordem de serviço não encontrada"
-            }), 404
+                "success": True,
+                "service_order": [],
+                "error": "Nenhuma ordem de serviço foi encontrada"
+            }), 200
+
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        return jsonify({'error': error}), 500
+    
+def edit_jobs(id_manutencao):
+    try:
+        # Obtenha os dados da requisição
+        data = request.get_json()
+        
+        # Verifique se os campos obrigatórios estão presentes
+        if not data or not isinstance(data, dict):
+            return jsonify({'error': 'Dados inválidos.'}), 400
+
+        # Construa a consulta SQL
+        with db.engine.connect() as connection:
+            sql = text('UPDATE manutencoes SET descricao = :descricao, custo_de_peca = :custo_de_peca, '
+                        'status = :status, inicio_da_manutencao = :inicio_da_manutencao, '
+                        'termino_da_manutencao = :termino_da_manutencao WHERE id_manutencao = :id_manutencao')
+            result = connection.execute(sql, {
+                'descricao': data.get('descricao'),
+                'custo_de_peca': data.get('custo_de_peca'),
+                'status': data.get('status'),
+                'inicio_da_manutencao': data.get('inicio_da_manutencao'),
+                'termino_da_manutencao': data.get('termino_da_manutencao'),
+                'id_manutencao': id_manutencao
+            })
+            connection.commit()
+
+        return jsonify({'success': True, 'message': 'Ordem de serviço atualizada com sucesso.'}), 200
 
     except SQLAlchemyError as e:
         error = str(e.__dict__['orig'])

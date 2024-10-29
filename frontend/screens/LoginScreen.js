@@ -91,7 +91,6 @@ const handleLogin = () => {
       </View>
 
       <View style={styles.formContainer}>
-        <Text style={styles.welcomeText}>Bem vindo!!</Text>
         <Image source={require('../assets/logo.png')} style={styles.logo} />
 
         {/* Alternância entre técnico e operador */}
@@ -188,6 +187,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginBottom: 20,
+    padding: 20,
   },
   switchButton: {
     padding: 10,
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEC601',
   },
   switchText: {
-    fontSize: 18,
+    fontSize: 25,
     fontWeight: 'bold',
   },
   formContainer: {
@@ -216,14 +216,6 @@ const styles = StyleSheet.create({
     height: 217,
     alignSelf: 'center',
     marginTop: 60,
-  },
-  welcomeText: {
-    color: '#FEC601',
-    fontSize: 40,
-    textAlign: 'left',
-    paddingLeft: 20,
-    paddingVertical: 10,
-    marginBottom: 20,
   },
   loginInstructions: {
     color: '#FEC601',
