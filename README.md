@@ -26,9 +26,9 @@ Arquivo fonte do projeto [Modelo Físico](https://dbdiagram.io/d/tcc-66bb96178b4
 - ignore, algumas coisas que eu estou focando em arrumar do meu projeto
 - criar tabela com problemas especificos (eliminar a necessidade do operador digitar)✔️
 - operador ira dizer as gravidade do problema e o problema já escrito✔️
+- tecnico chegou na maquina, avisar quando iniciar, avisar quando acabar (horas automaticas, nao precisa dizer que horas é), descrever problema, solicitar compra de algo✔️
+- dia que o chamado foi fechado✔️
 - aviso abertura de chamado (indepente urgencia)
-- tecnico chegou na maquina, avisar quando iniciar, avisar quando acabar (horas automaticas, nao precisa dizer que horas é), descrever problema, solicitar compra de algo
-- dia que o chamado foi fechado
 - gerente comanda todos os cruds do projeto
 - ele quem dita quem ira fazer cada trabalho ou quem é o responsavel por cada maquina (if receber qualquer aviso de maquina se nao estiver em trabalho, alert)
 

@@ -1,16 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
-const HomeAdminScreen = ({ navigation }) => {
+const MenageUsersScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
-        <Text style={styles.welcomeText}>Bem-vindo ao painel de administrador!</Text>
+        <Text style={styles.welcomeText}>Gerenciamento de usuários</Text>
       </View>
       <View style={styles.content}>
-        <Image source={require('../assets/logo.png')} style={styles.logo} />
-        <Text style={styles.monitoringText}>Painel de controle e monitoramento</Text>
-        <Text style={styles.infoText}>Funções administrativas disponíveis:</Text>
+        <Text style={styles.monitoringText}>Editar funcionários</Text>
         
         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Gerenciar usuários')}>
           <Text style={styles.buttonText}>Gerenciar Usuários</Text>
@@ -88,4 +86,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeAdminScreen;
+export default MenageUsersScreen;

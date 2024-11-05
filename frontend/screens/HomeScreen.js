@@ -5,11 +5,6 @@ import moment from 'moment';
 import { useNavigation } from '@react-navigation/native'; 
 import { api } from '../api/api';
 
-// logs para operador
-// log 1: |1/1| |1/2| |1/3| |2/6|
-// logs para tecnico
-// log 2: |1/123|
-
 const HomeScreen = () => {
   const { user } = useUser();
   const [userName, setUserName] = useState('');

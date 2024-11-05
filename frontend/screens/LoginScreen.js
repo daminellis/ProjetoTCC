@@ -4,10 +4,15 @@ import { useFocusEffect } from '@react-navigation/native';
 import React, { useState, useCallback } from 'react';
 import { api } from '../api/api';
 
+// logs para operador
+// log 1: |1/1| |1/2| |1/3| |2/6|
+// logs para tecnico
+// log 2: |1/123|
+
 // Pares de (id_maquina, id_operador) que representam administradores
 const ADMIN_CREDENTIALS = [
-  { id_maquina: 'maquina1', id_operador: 'admin1' }, // Substitua com os IDs reais
-  { id_maquina: 'maquina2', id_operador: 'admin2' }, // Substitua com os IDs reais
+  { id_maquina: 'a', id_operador: 'a' }, 
+  { id_maquina: 'maquina2', id_operador: 'admin2' }, 
 ];
 
 const LoginScreen = ({ navigation }) => {
@@ -53,7 +58,7 @@ const handleLogin = () => {
 
   if (isAdmin) {
     // Se for um administrador, navega para a tela de administrador
-    const nextScreen = 'DrawerAdmin'; // Navega para a tela do administrador
+    const nextScreen = 'DrawerAdmin'; 
     navigation.navigate(nextScreen);
     Alert.alert('Login bem-sucedido', `Bem-vindo, Administrador ${id_operador}!`);
     return;
