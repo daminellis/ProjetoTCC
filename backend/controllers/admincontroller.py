@@ -65,3 +65,47 @@ def get_operadores():
     except SQLAlchemyError as e:
         error = str(e.__dict__['orig'])
         return jsonify({'error': error}), 500
+
+def update_operador():
+    try:
+        # Coleta os dados da requisição
+        data = request.json
+        id_operador = data.get('id_operador')
+        nome = data.get('nome')
+        horario_de_trabalho = data.get('horario_de_trabalho')
+        id_maquina = data.get('id_maquina')
+
+        # Verifica se todos os campos necessários estão presentes
+        if not all([id_operador, nome, horario_de_trabalho, id_maquina]):
+            return jsonify({"success": False, "error": "Dados incompletos"}), 400
+
+        # Conecta ao banco de dados e executa as queries de atualização
+        with db.engine.connect() as connection:
+            # Atualiza os dados na tabela de operadores
+            update_operador_sql = text("""
+                UPDATE operadores 
+                SET nome = :nome, horario_de_trabalho = :horario_de_trabalho 
+                WHERE id_operador = :id_operador
+            """)
+            connection.execute(update_operador_sql, {
+                'nome': nome,
+                'horario_de_trabalho': horario_de_trabalho,
+                'id_operador': id_operador
+            })
+
+            # Atualiza a máquina associada na tabela monitores
+            update_monitor_sql = text("""
+                UPDATE monitores 
+                SET id_maquina = :id_maquina 
+                WHERE id_operador = :id_operador
+            """)
+            connection.execute(update_monitor_sql, {
+                'id_maquina': id_maquina,
+                'id_operador': id_operador
+            })
+
+        return jsonify({"success": True, "message": "Operador atualizado com sucesso!"}), 200
+
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        return jsonify({"success": False, "error": error}), 500

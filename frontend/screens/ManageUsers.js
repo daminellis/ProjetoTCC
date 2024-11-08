@@ -1,27 +1,173 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Text, Alert, ActivityIndicator, FlatList } from 'react-native';
+import { Card, Title, Paragraph, IconButton, Modal, TextInput, Button, Portal } from 'react-native-paper';
+import { api } from '../api/api';
+import { TouchableOpacity } from 'react-native-gesture-handler';
+import { useFocusEffect } from '@react-navigation/native'; 
 
-const MenageUsersScreen = ({ navigation }) => {
+const MenageUsersScreen = () => {  
+  const [loading, setLoading] = useState(false);
+  const [operators, setOperators] = useState([]);
+  const [expandedOperatorId, setExpandedOperatorId] = useState(null);
+  const [editingOperator, setEditingOperator] = useState(null); // Armazena operador em edição
+  const [modalVisible, setModalVisible] = useState(false); // Controla a visibilidade do modal
+  const [formData, setFormData] = useState({ nome: '', horario_de_trabalho: '', id_maquina: '' });
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchOperators = async () => {
+        try {
+          setLoading(true);
+          const response = await api.get(`/getoperadores`);
+          
+          if (response.data.operadores.length === 0){
+            Alert.alert('Aviso','Nenhum operador foi encontrado.');
+          }
+
+          setOperators(response.data.operadores); 
+        } catch (error) {
+          console.error(error);
+          Alert.alert('Erro', 'Erro ao buscar os operadores.');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchOperators();
+    }, [])
+  );
+
+  const toggleCard = (id) => {
+    setExpandedOperatorId((prev) => (prev === id ? null : id));
+  };
+
+  const handleEdit = (operator) => {
+    setEditingOperator(operator); // Define o operador atual para edição
+    setFormData({
+      nome: operator.nome,
+      horario_de_trabalho: operator.horario_de_trabalho,
+      id_maquina: operator.id_maquina,
+    });
+    setModalVisible(true); // Abre o modal de edição
+  };
+
+  const handleSave = async () => {
+    try {
+      const response = await api.put(`/updateoperador`, {
+        id_operador: editingOperator.id_operador,
+        nome: formData.nome,
+        horario_de_trabalho: formData.horario_de_trabalho,
+        id_maquina: formData.id_maquina,
+      });
+
+      // Atualizar a lista de operadores após salvar
+      const updatedOperators = operators.map((operator) =>
+        operator.id_operador === editingOperator.id_operador
+          ? { ...operator, ...formData }
+          : operator
+      );
+
+      setOperators(updatedOperators);
+      setModalVisible(false); // Fecha o modal após salvar
+      Alert.alert('Sucesso', 'Dados do operador atualizados com sucesso!');
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro', 'Erro ao atualizar o operador.');
+    }
+  };
+
+  const renderOperator = ({ item }) => {
+    const isExpanded = expandedOperatorId === item.id_operador; 
+
+    return (
+      <Card style={styles.card}>
+        <View style={styles.cardHeader}>
+          <TouchableOpacity onPress={() => toggleCard(item.id_operador)} style={{ flex: 1 }}>
+            <Card.Content>
+              <Text style={styles.cardActionText}>
+                <Text style={styles.label}>ID Operador:</Text> {item.id_operador}
+              </Text>
+              <Text style={styles.cardActionText}>
+                <Text style={styles.label}>Nome:</Text> {item.nome}
+              </Text>
+            </Card.Content>
+          </TouchableOpacity>
+          <IconButton
+            icon="pencil"
+            size={50}
+            color="#FEC601"
+            onPress={() => handleEdit(item)} // Chama o modal de edição
+          />
+        </View>
+
+        {isExpanded && (
+          <Card.Content style={styles.detailsContainer}>
+            <Title style={styles.details}>Detalhes do Operador:</Title>
+            <Paragraph style={styles.detailText}>
+              <Text style={styles.label}>Horário de Trabalho:</Text> {item.horario_de_trabalho}
+            </Paragraph>
+            <Paragraph style={styles.detailText}>
+              <Text style={styles.label}>ID Monitor:</Text> {item.id_monitor}
+            </Paragraph>
+            <Paragraph style={styles.detailText}>
+              <Text style={styles.label}>ID Máquina:</Text> {item.id_maquina}
+            </Paragraph>
+          </Card.Content>
+        )}
+      </Card>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
-        <Text style={styles.welcomeText}>Gerenciamento de usuários</Text>
+        <Text style={styles.title}>Operadores</Text>
       </View>
       <View style={styles.content}>
-        <Text style={styles.monitoringText}>Editar funcionários</Text>
-        
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Gerenciar usuários')}>
-          <Text style={styles.buttonText}>Gerenciar Usuários</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Relatórios</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Configurações do Sistema</Text>
-        </TouchableOpacity>
+        {loading ? (
+          <ActivityIndicator size="large" color="#000" />
+        ) : (
+          <FlatList
+            data={operators}
+            keyExtractor={(item) => item.id_operador.toString()}
+            renderItem={renderOperator}
+            ListEmptyComponent={<Text style={styles.noDataText}>Nenhum operador encontrado.</Text>}
+          />
+        )}
       </View>
+
+      {/* Modal de Edição */}
+      <Portal>
+        <Modal visible={modalVisible} onDismiss={() => setModalVisible(false)} contentContainerStyle={styles.modalContainer}>
+          <Title style={styles.modalTitle}>Editar Operador</Title>
+          <TextInput
+            label="Nome"
+            value={formData.nome}
+            onChangeText={(text) => setFormData({ ...formData, nome: text })}
+            style={styles.input}
+          />
+          <TextInput
+            label="Horário de Trabalho"
+            value={formData.horario_de_trabalho}
+            onChangeText={(text) => setFormData({ ...formData, horario_de_trabalho: text })}
+            style={styles.input}
+          />
+          <TextInput
+            label="ID Máquina"
+            value={String(formData.id_maquina)}
+            onChangeText={(text) => setFormData({ ...formData, id_maquina: text })}
+            style={styles.input}
+          />
+          <View style={styles.buttonContainer}>
+            <Button mode="contained" onPress={handleSave} style={styles.saveButton} labelStyle={styles.buttonText}>
+              Salvar
+            </Button>
+            <Button mode="contained" onPress={() => setModalVisible(false)} style={styles.cancelButton} labelStyle={styles.buttonText}>
+              Cancelar
+            </Button>
+          </View>
+        </Modal>
+      </Portal>
     </View>
   );
 };
@@ -32,15 +178,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEC601',
   },
   topBar: {
-    backgroundColor: 'transparent', 
+    backgroundColor: 'transparent',
     paddingVertical: 50,
     alignItems: 'center',
   },
-  welcomeText: {
+  title: {
     fontSize: 40,
     fontWeight: 'bold',
-    color: 'white', 
-    marginBottom: 10,
+    color: 'white',
   },
   content: {
     flex: 1,
@@ -49,40 +194,88 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 30,
     padding: 20,
   },
-  logo: {
-    width: 762,
-    height: 217,
-    alignSelf: 'center',
-    marginTop: 60
+  details: {
+    fontSize: 25,
+    color: '#333',
+    marginBottom: 10,
   },
-  monitoringText: {
-    fontSize: 40,
+  card: {
+    marginBottom: 15,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    elevation: 3, 
+  },
+  cardActionText: {
+    fontSize: 30,
+    color: '#333',
+  },
+  label: {
     fontWeight: 'bold',
+    color: '#FEC601', 
+  },
+  detailsContainer: {
+    marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+  },
+  detailText: {
+    paddingVertical: 10, 
+    fontSize: 25,
+    color: '#333',
+  },
+  noDataText: {
     textAlign: 'center',
-    color: '#FEC601',
-    paddingVertical: 30,
-    marginBottom: 20,
-  },
-  infoText: {
-    fontSize: 32, 
+    marginTop: 20,
+    fontSize: 18,
     color: 'white',
-    textAlign: 'center', 
-    marginVertical: 10,
-    marginBottom: 20,
+    fontSize: 30,
   },
-  button: {
-    backgroundColor: '#FEC601',
-    padding: 10,
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    marginHorizontal: 20,
+    borderRadius: 10,
     width: '80%',
     alignSelf: 'center',
-    borderRadius: 50,
+  },
+  modalTitle: {
+    fontSize: 30,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  input: {
+    marginBottom: 15,
+    backgroundColor: 'white',
+    borderWidth: 2,
+    borderColor: '#FEC601',
+    borderRadius: 5,
+    fontSize: 20,
+    padding: 10,
+  },
+  buttonContainer: {
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 20,
   },
+  saveButton: {
+    width: '80%',
+    backgroundColor: '#FEC601',
+    marginBottom: 10,
+  },
+  cancelButton: {
+    width: '80%',
+    backgroundColor: 'gray',
+  },
   buttonText: {
-    color: 'black',
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 20,
   },
 });
 

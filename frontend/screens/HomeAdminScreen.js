@@ -17,12 +17,17 @@ const HomeAdminScreen = ({ navigation }) => {
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Relatórios</Text>
+          <Text style={styles.buttonText}>Gerenciar trabalhadores</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Configurações do Sistema</Text>
+          <Text style={styles.buttonText}>Gerenciar trabalhos</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity style={styles.button}>
+          <Text style={styles.buttonText}>Relatórios</Text>
+        </TouchableOpacity>
+
       </View>
     </View>
   );
