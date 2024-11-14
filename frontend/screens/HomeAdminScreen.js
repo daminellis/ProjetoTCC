@@ -16,8 +16,8 @@ const HomeAdminScreen = ({ navigation }) => {
           <Text style={styles.buttonText}>Gerenciar Usuários</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Gerenciar trabalhadores</Text>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Gerenciar técnicos')}>
+          <Text style={styles.buttonText}>Gerenciar Técnicos</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.button}>

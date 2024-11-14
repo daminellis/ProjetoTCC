@@ -111,3 +111,38 @@ def update_operador():
     except SQLAlchemyError as e:
         error = str(e.__dict__['orig'])
         return jsonify({"success": False, "error": error}), 500
+    
+def update_tecnico():
+    try:
+        # Coleta os dados da requisição
+        data = request.json
+        id_tecnico = data.get('id_tecnico')
+        nome = data.get('nome')
+        area_de_manutencao = data.get('area_de_manutencao')
+        senha = data.get('senha')
+
+        # Verifica se todos os campos necessários estão presentes
+        if not all([id_tecnico, nome, area_de_manutencao, senha]):
+            return jsonify({"success": False, "error": "Dados incompletos"}), 400
+        
+        # Conecta ao banco de dados e executa a query de atualização
+
+        with db.engine.connect() as connection:
+            update_tecnico_sql = text("""
+                UPDATE tecnicos 
+                SET nome = :nome, area_de_manutencao = :area_de_manutencao, senha = :senha 
+                WHERE id_tecnico = :id_tecnico
+            """)
+            connection.execute(update_tecnico_sql, {
+                'nome': nome,
+                'area_de_manutencao': area_de_manutencao,
+                'senha': senha,
+                'id_tecnico': id_tecnico
+            })
+            connection.commit()
+
+        return jsonify({"success": True, "message": "Técnico atualizado com sucesso!"}), 200
+    
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        return jsonify({"success": False, "error": error}), 500

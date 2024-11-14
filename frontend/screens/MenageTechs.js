@@ -53,7 +53,7 @@ const MenageTechsScreen = () => {
 
   const handleSave = async () => {
     try {
-      const response = await api.put(`/updateoperador`, {
+      const response = await api.put(`/updatetecnico`, {
         id_tecnico: editingOperator.id_tecnico,
         nome: formData.nome,
         area_de_manutencao: formData.area_de_manutencao,
@@ -118,7 +118,7 @@ const MenageTechsScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
-        <Text style={styles.title}>tecnicos</Text>
+        <Text style={styles.title}>Tecnicos</Text>
       </View>
       <View style={styles.content}>
         {loading ? (
@@ -144,14 +144,14 @@ const MenageTechsScreen = () => {
             style={styles.input}
           />
           <TextInput
-            label="Horário de Trabalho"
+            label="Area de Manutenção"
             value={formData.area_de_manutencao}
             onChangeText={(text) => setFormData({ ...formData, area_de_manutencao: text })}
             style={styles.input}
           />
           <TextInput
-            label="ID Máquina"
-            value={String(formData.senha)}
+            label="Senha"
+            value={String(formData.senha )}
             onChangeText={(text) => setFormData({ ...formData, senha: text })}
             style={styles.input}
           />
