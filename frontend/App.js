@@ -12,6 +12,7 @@ import HomeTecnicoScreen from './screens/HomeTecnicoScreen';
 import MaintenceScreen from './screens/MaintenceScreen'; 
 import HomeAdminScreen from './screens/HomeAdminScreen';
 import ManageUsers from './screens/ManageUsers';
+import MenageTechs from './screens/MenageTechs';
 
 import { UserProvider, useUser } from './contexts/UserContext';
 import { Provider as PaperProvider } from 'react-native-paper';
@@ -95,6 +96,7 @@ const DrawerNavigatorAdmin = () => {
       <Drawer.Navigator drawerContent={(props) => <CustomDrawerContentAdmin {...props} />}>
         <Drawer.Screen name="Home Admin" component={HomeAdminScreen} />
         <Drawer.Screen name="Gerenciar usuários" component={ManageUsers} /> 
+        <Drawer.Screen name="Gerenciar técnicos" component={MenageTechs} />
       </Drawer.Navigator>
     </PaperProvider>
   );

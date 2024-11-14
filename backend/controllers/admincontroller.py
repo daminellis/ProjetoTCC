@@ -73,7 +73,7 @@ def update_operador():
         id_operador = data.get('id_operador')
         nome = data.get('nome')
         horario_de_trabalho = data.get('horario_de_trabalho')
-        id_maquina = data.get('id_maquina')
+        id_maquina = data.get('id_maquina') 
 
         # Verifica se todos os campos necessários estão presentes
         if not all([id_operador, nome, horario_de_trabalho, id_maquina]):
@@ -92,6 +92,7 @@ def update_operador():
                 'horario_de_trabalho': horario_de_trabalho,
                 'id_operador': id_operador
             })
+            connection.commit()
 
             # Atualiza a máquina associada na tabela monitores
             update_monitor_sql = text("""
@@ -103,6 +104,7 @@ def update_operador():
                 'id_maquina': id_maquina,
                 'id_operador': id_operador
             })
+            connection.commit()
 
         return jsonify({"success": True, "message": "Operador atualizado com sucesso!"}), 200
 
