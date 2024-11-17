@@ -1,30 +1,32 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Text, Alert, ActivityIndicator, FlatList } from 'react-native';
-import { Card, Title, Paragraph, IconButton, Modal, TextInput, Button, Portal } from 'react-native-paper';
+import { Card, Title, Paragraph, IconButton, Modal, TextInput, Button, Portal, Searchbar } from 'react-native-paper';
 import { api } from '../api/api';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useFocusEffect } from '@react-navigation/native'; 
 
 const MenageTechsScreen = () => {  
   const [loading, setLoading] = useState(false);
-  const [operators, setOperators] = useState([]);
+  const [technicians, setTechnicians] = useState([]);
   const [expandedTecnicoId, setExpandedTecnicoId] = useState(null);
-  const [editingOperator, setEditingOperator] = useState(null); // Armazena operador em edição
-  const [modalVisible, setModalVisible] = useState(false); // Controla a visibilidade do modal
+  const [editingTechnician, setEditingTechnician] = useState(null); // Técnico em edição
+  const [modalVisible, setModalVisible] = useState(false); // Modal de edição
+  const [addModalVisible, setAddModalVisible] = useState(false); // Modal de adição
   const [formData, setFormData] = useState({ nome: '', area_de_manutencao: '', senha: '' });
+  const [searchQuery, setSearchQuery] = useState('');
 
   useFocusEffect(
     React.useCallback(() => {
-      const fetchOperators = async () => {
+      const fetchTechnicians = async () => {
         try {
           setLoading(true);
           const response = await api.get(`/gettecnicos`);
           
-          if (response.data.tecnicos.length === 0){
-            Alert.alert('Aviso','Nenhum técnico foi encontrado.');
+          if (response.data.tecnicos.length === 0) {
+            Alert.alert('Aviso', 'Nenhum técnico foi encontrado.');
           }
 
-          setOperators(response.data.tecnicos); 
+          setTechnicians(response.data.tecnicos); 
         } catch (error) {
           console.error(error);
           Alert.alert('Erro', 'Erro ao buscar os técnicos.');
@@ -33,7 +35,7 @@ const MenageTechsScreen = () => {
         }
       };
 
-      fetchOperators();
+      fetchTechnicians();
     }, [])
   );
 
@@ -41,42 +43,89 @@ const MenageTechsScreen = () => {
     setExpandedTecnicoId((prev) => (prev === id ? null : id));
   };
 
-  const handleEdit = (tecnico) => {
-    setEditingOperator(tecnico); // Define o operador atual para edição
+  const handleEdit = (technician) => {
+    setEditingTechnician(technician); // Define o técnico atual para edição
     setFormData({
-      nome: tecnico.nome,
-      area_de_manutencao: tecnico.area_de_manutencao,
-      senha: tecnico.senha,
+      nome: technician.nome,
+      area_de_manutencao: technician.area_de_manutencao,
+      senha: technician.senha,
     });
     setModalVisible(true); // Abre o modal de edição
   };
 
   const handleSave = async () => {
     try {
-      const response = await api.put(`/updatetecnico`, {
-        id_tecnico: editingOperator.id_tecnico,
+      await api.put(`/updatetecnico`, {
+        id_tecnico: editingTechnician.id_tecnico,
         nome: formData.nome,
         area_de_manutencao: formData.area_de_manutencao,
         senha: formData.senha,
       });
 
-      // Atualizar a lista de tecnicos após salvar
-      const updatedOperators = operators.map((tecnico) =>
-        tecnico.id_tecnico === editingOperator.id_tecnico
-          ? { ...tecnico, ...formData }
-          : tecnico
+      // Atualiza a lista após edição
+      const updatedTechnicians = technicians.map((technician) =>
+        technician.id_tecnico === editingTechnician.id_tecnico
+          ? { ...technician, ...formData }
+          : technician
       );
 
-      setOperators(updatedOperators);
+      setTechnicians(updatedTechnicians);
       setModalVisible(false); // Fecha o modal após salvar
-      Alert.alert('Sucesso', 'Dados do tecnico atualizados com sucesso!');
+      Alert.alert('Sucesso', 'Dados do técnico atualizados com sucesso!');
     } catch (error) {
       console.error(error);
-      Alert.alert('Erro', 'Erro ao atualizar o tecnico.');
+      Alert.alert('Erro', 'Erro ao atualizar o técnico.');
     }
   };
 
-  const renderOperator = ({ item }) => {
+  const handleAddTechnician = async () => {
+    try {
+      const response = await api.post(`/createtecnico`, formData);
+
+      setTechnicians([...technicians, response.data.tecnico]);
+      setAddModalVisible(false); // Fecha o modal de adição
+      Alert.alert('Sucesso', 'Técnico adicionado com sucesso!');
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro', 'Erro ao adicionar técnico.');
+    }
+  };
+
+  const handleDeleteTechnician = async (id_tecnico) => {
+    Alert.alert('Confirmação', 'Tem certeza que deseja excluir este técnico?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Excluir',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await api.delete(`/deletetecnico`, { data: { id_tecnico } });
+
+            const updatedTechnicians = technicians.filter((t) => t.id_tecnico !== id_tecnico);
+            setTechnicians(updatedTechnicians);
+            Alert.alert('Sucesso', 'Técnico excluído com sucesso!');
+          } catch (error) {
+            console.error(error);
+            Alert.alert('Erro', 'Erro ao excluir o técnico.');
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (query.trim() === '') {
+      setTechnicians(technicians);
+    } else {
+      const filtered = technicians.filter((technician) =>
+        technician.nome.toLowerCase().includes(query.toLowerCase())
+      );
+      setTechnicians(filtered);
+    }
+  };
+
+  const renderTechnician = ({ item }) => {
     const isExpanded = expandedTecnicoId === item.id_tecnico; 
 
     return (
@@ -85,24 +134,20 @@ const MenageTechsScreen = () => {
           <TouchableOpacity onPress={() => toggleCard(item.id_tecnico)} style={{ flex: 1 }}>
             <Card.Content>
               <Text style={styles.cardActionText}>
-                <Text style={styles.label}>ID Tecnico:</Text> {item.id_tecnico}
+                <Text style={styles.label}>ID Técnico:</Text> {item.id_tecnico}
               </Text>
               <Text style={styles.cardActionText}>
                 <Text style={styles.label}>Nome:</Text> {item.nome}
               </Text>
             </Card.Content>
           </TouchableOpacity>
-          <IconButton
-            icon="pencil"
-            size={50}
-            color="#FEC601"
-            onPress={() => handleEdit(item)} // Chama o modal de edição
-          />
+          <IconButton icon="pencil" size={50} color="#FEC601" onPress={() => handleEdit(item)} />
+          <IconButton icon="delete" size={50} color="red" onPress={() => handleDeleteTechnician(item.id_tecnico)} />
         </View>
 
         {isExpanded && (
           <Card.Content style={styles.detailsContainer}>
-            <Title style={styles.details}>Detalhes do Tecnico:</Title>
+            <Title style={styles.details}>Detalhes do Técnico:</Title>
             <Paragraph style={styles.detailText}>
               <Text style={styles.label}>Área de manutenção:</Text> {item.area_de_manutencao}
             </Paragraph>
@@ -118,17 +163,33 @@ const MenageTechsScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
-        <Text style={styles.title}>Tecnicos</Text>
+        <Text style={styles.title}>Técnicos</Text>
       </View>
+      <Searchbar
+        placeholder="Pesquisar por nome"
+        value={searchQuery}
+        onChangeText={handleSearch}
+        style={styles.searchbar}
+      />
       <View style={styles.content}>
+        <Button
+          mode="contained"
+          onPress={() => {
+            setFormData({ nome: '', area_de_manutencao: '', senha: '' });
+            setAddModalVisible(true);
+          }}
+          style={styles.addButton}
+        >
+        <Text style={styles.addText}> Adicionar Técnico </Text>
+        </Button>
         {loading ? (
           <ActivityIndicator size="large" color="#000" />
         ) : (
           <FlatList
-            data={operators}
+            data={technicians}
             keyExtractor={(item) => item.id_tecnico.toString()}
-            renderItem={renderOperator}
-            ListEmptyComponent={<Text style={styles.noDataText}>Nenhum operador encontrado.</Text>}
+            renderItem={renderTechnician}
+            ListEmptyComponent={<Text style={styles.noDataText}>Nenhum técnico encontrado.</Text>}
           />
         )}
       </View>
@@ -136,7 +197,7 @@ const MenageTechsScreen = () => {
       {/* Modal de Edição */}
       <Portal>
         <Modal visible={modalVisible} onDismiss={() => setModalVisible(false)} contentContainerStyle={styles.modalContainer}>
-          <Title style={styles.modalTitle}>Editar Operador</Title>
+          <Title style={styles.modalTitle}>Editar Técnico</Title>
           <TextInput
             label="Nome"
             value={formData.nome}
@@ -144,22 +205,53 @@ const MenageTechsScreen = () => {
             style={styles.input}
           />
           <TextInput
-            label="Area de Manutenção"
+            label="Área de Manutenção"
             value={formData.area_de_manutencao}
             onChangeText={(text) => setFormData({ ...formData, area_de_manutencao: text })}
             style={styles.input}
           />
           <TextInput
             label="Senha"
-            value={String(formData.senha )}
+            value={formData.senha}
             onChangeText={(text) => setFormData({ ...formData, senha: text })}
             style={styles.input}
           />
           <View style={styles.buttonContainer}>
-            <Button mode="contained" onPress={handleSave} style={styles.saveButton} labelStyle={styles.buttonText}>
+            <Button mode="contained" onPress={handleSave} style={styles.saveButton}>
               Salvar
             </Button>
-            <Button mode="contained" onPress={() => setModalVisible(false)} style={styles.cancelButton} labelStyle={styles.buttonText}>
+            <Button mode="contained" onPress={() => setModalVisible(false)} style={styles.cancelButton}>
+              Cancelar
+            </Button>
+          </View>
+        </Modal>
+
+        {/* Modal de Adição */}
+        <Modal visible={addModalVisible} onDismiss={() => setAddModalVisible(false)} contentContainerStyle={styles.modalContainer}>
+          <Title style={styles.modalTitle}>Adicionar Técnico</Title>
+          <TextInput
+            label="Nome"
+            value={formData.nome}
+            onChangeText={(text) => setFormData({ ...formData, nome: text })}
+            style={styles.input}
+          />
+          <TextInput
+            label="Área de Manutenção"
+            value={formData.area_de_manutencao}
+            onChangeText={(text) => setFormData({ ...formData, area_de_manutencao: text })}
+            style={styles.input}
+          />
+          <TextInput
+            label="Senha"
+            value={formData.senha}
+            onChangeText={(text) => setFormData({ ...formData, senha: text })}
+            style={styles.input}
+          />
+          <View style={styles.buttonContainer}>
+            <Button mode="contained" onPress={handleAddTechnician} style={styles.saveButton}>
+              Adicionar
+            </Button>
+            <Button mode="contained" onPress={() => setAddModalVisible(false)} style={styles.cancelButton}>
               Cancelar
             </Button>
           </View>
@@ -183,6 +275,28 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontWeight: 'bold',
     color: 'white',
+  },
+  searchbar: {
+    marginHorizontal: 20,
+    marginBottom: 10,
+    borderRadius: 10,
+  },
+  addButton: {
+    alignSelf: 'center', 
+    marginBottom: 20,    
+    backgroundColor: 'white',
+    borderRadius: 10,
+    borderWidth: 2,
+    justifyContent: 'center', 
+    paddingHorizontal: 15,    
+    paddingVertical: 10,      
+    display: 'flex',
+  },
+  addText: {
+    fontSize: 25,
+    color: '#FEC601',
+    textAlign: 'center',      
+    lineHeight: 30,
   },
   content: {
     flex: 1,
