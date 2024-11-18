@@ -95,8 +95,8 @@ const DrawerNavigatorAdmin = () => {
     <PaperProvider>
       <Drawer.Navigator drawerContent={(props) => <CustomDrawerContentAdmin {...props} />}>
         <Drawer.Screen name="Home Admin" component={HomeAdminScreen} />
-        <Drawer.Screen name="Gerenciar usuários" component={ManageUsers} /> 
-        <Drawer.Screen name="Gerenciar técnicos" component={MenageTechs} />
+        <Drawer.Screen name="Gerenciar Operadores" component={ManageUsers} /> 
+        <Drawer.Screen name="Gerenciar Técnicos" component={MenageTechs} />
       </Drawer.Navigator>
     </PaperProvider>
   );

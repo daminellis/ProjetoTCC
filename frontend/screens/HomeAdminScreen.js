@@ -9,14 +9,14 @@ const HomeAdminScreen = ({ navigation }) => {
       </View>
       <View style={styles.content}>
         <Image source={require('../assets/logo.png')} style={styles.logo} />
-        <Text style={styles.monitoringText}>Painel de controle e monitoramento</Text>
+        <Text style={styles.monitoringText}>Painel de gerenciamentos</Text>
         <Text style={styles.infoText}>Funções administrativas disponíveis:</Text>
         
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Gerenciar usuários')}>
-          <Text style={styles.buttonText}>Gerenciar Usuários</Text>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Gerenciar Operadores')}>
+          <Text style={styles.buttonText}>Gerenciar Operadores</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Gerenciar técnicos')}>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Gerenciar Técnicos')}>
           <Text style={styles.buttonText}>Gerenciar Técnicos</Text>
         </TouchableOpacity>
 
