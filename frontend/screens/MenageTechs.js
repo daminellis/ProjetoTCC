@@ -1,42 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, Text, Alert, ActivityIndicator, FlatList } from 'react-native';
 import { Card, Title, Paragraph, IconButton, Modal, TextInput, Button, Portal, Searchbar } from 'react-native-paper';
 import { api } from '../api/api';
 import { TouchableOpacity } from 'react-native-gesture-handler';
-import { useFocusEffect } from '@react-navigation/native'; 
+import { useFocusEffect } from '@react-navigation/native';
 
-const MenageTechsScreen = () => {  
+const MenageTechsScreen = () => {
   const [loading, setLoading] = useState(false);
   const [technicians, setTechnicians] = useState([]);
   const [expandedTecnicoId, setExpandedTecnicoId] = useState(null);
-  const [editingTechnician, setEditingTechnician] = useState(null); // Técnico em edição
-  const [modalVisible, setModalVisible] = useState(false); // Modal de edição
-  const [addModalVisible, setAddModalVisible] = useState(false); // Modal de adição
+  const [editingTechnician, setEditingTechnician] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [addModalVisible, setAddModalVisible] = useState(false);
   const [formData, setFormData] = useState({ nome: '', area_de_manutencao: '', senha: '' });
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Refatorando a função de busca para gerar uma funcao reutilizavel de refresh
+  const fetchTechnicians = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/gettecnicos`);
+
+      if (response.data.tecnicos.length === 0) {
+        Alert.alert('Aviso', 'Nenhum técnico foi encontrado.');
+      }
+
+      setTechnicians(response.data.tecnicos);
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro', 'Erro ao buscar os técnicos.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useFocusEffect(
-    React.useCallback(() => {
-      const fetchTechnicians = async () => {
-        try {
-          setLoading(true);
-          const response = await api.get(`/gettecnicos`);
-          
-          if (response.data.tecnicos.length === 0) {
-            Alert.alert('Aviso', 'Nenhum técnico foi encontrado.');
-          }
-
-          setTechnicians(response.data.tecnicos); 
-        } catch (error) {
-          console.error(error);
-          Alert.alert('Erro', 'Erro ao buscar os técnicos.');
-        } finally {
-          setLoading(false);
-        }
-      };
-
+    useCallback(() => {
       fetchTechnicians();
-    }, [])
+    }, [fetchTechnicians])
   );
 
   const toggleCard = (id) => {
@@ -44,13 +45,13 @@ const MenageTechsScreen = () => {
   };
 
   const handleEdit = (technician) => {
-    setEditingTechnician(technician); // Define o técnico atual para edição
+    setEditingTechnician(technician);
     setFormData({
       nome: technician.nome,
       area_de_manutencao: technician.area_de_manutencao,
       senha: technician.senha,
     });
-    setModalVisible(true); // Abre o modal de edição
+    setModalVisible(true);
   };
 
   const handleSave = async () => {
@@ -62,15 +63,8 @@ const MenageTechsScreen = () => {
         senha: formData.senha,
       });
 
-      // Atualiza a lista após edição
-      const updatedTechnicians = technicians.map((technician) =>
-        technician.id_tecnico === editingTechnician.id_tecnico
-          ? { ...technician, ...formData }
-          : technician
-      );
-
-      setTechnicians(updatedTechnicians);
-      setModalVisible(false); // Fecha o modal após salvar
+      fetchTechnicians();      
+      setModalVisible(false);
       Alert.alert('Sucesso', 'Dados do técnico atualizados com sucesso!');
     } catch (error) {
       console.error(error);
@@ -80,10 +74,14 @@ const MenageTechsScreen = () => {
 
   const handleAddTechnician = async () => {
     try {
-      const response = await api.post(`/createtecnico`, formData);
+      await api.post(`/createtecnico`, formData);
 
-      setTechnicians([...technicians, response.data.tecnico]);
-      setAddModalVisible(false); // Fecha o modal de adição
+      setFormData({ nome: '', area_de_manutencao: '', senha: '' });
+      setAddModalVisible(false);
+
+      // Reutilizando a função de busca para atualizar a lista
+      fetchTechnicians();
+
       Alert.alert('Sucesso', 'Técnico adicionado com sucesso!');
     } catch (error) {
       console.error(error);
@@ -101,8 +99,9 @@ const MenageTechsScreen = () => {
           try {
             await api.delete(`/deletetecnico`, { data: { id_tecnico } });
 
-            const updatedTechnicians = technicians.filter((t) => t.id_tecnico !== id_tecnico);
-            setTechnicians(updatedTechnicians);
+            //const updatedTechnicians = technicians.filter((t) => t.id_tecnico !== id_tecnico);
+            //setTechnicians(updatedTechnicians);
+            fetchTechnicians();
             Alert.alert('Sucesso', 'Técnico excluído com sucesso!');
           } catch (error) {
             console.error(error);
@@ -116,7 +115,7 @@ const MenageTechsScreen = () => {
   const handleSearch = (query) => {
     setSearchQuery(query);
     if (query.trim() === '') {
-      setTechnicians(technicians);
+      fetchTechnicians(); // Busca novamente todos os técnicos
     } else {
       const filtered = technicians.filter((technician) =>
         technician.nome.toLowerCase().includes(query.toLowerCase())
@@ -126,8 +125,8 @@ const MenageTechsScreen = () => {
   };
 
   const renderTechnician = ({ item }) => {
-    const isExpanded = expandedTecnicoId === item.id_tecnico; 
-
+    const isExpanded = expandedTecnicoId === item.id_tecnico;
+    
     return (
       <Card style={styles.card}>
         <View style={styles.cardHeader}>
