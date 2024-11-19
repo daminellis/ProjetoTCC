@@ -5,7 +5,7 @@ import { api } from '../api/api';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useFocusEffect } from '@react-navigation/native';
 
-const MenageTechsScreen = () => {
+const ManageTechsScreen = () => {
   const [loading, setLoading] = useState(false);
   const [technicians, setTechnicians] = useState([]);
   const [expandedTecnicoId, setExpandedTecnicoId] = useState(null);
@@ -115,7 +115,7 @@ const MenageTechsScreen = () => {
   const handleSearch = (query) => {
     setSearchQuery(query);
     if (query.trim() === '') {
-      fetchTechnicians(); // Busca novamente todos os técnicos
+      fetchTechnicians(); 
     } else {
       const filtered = technicians.filter((technician) =>
         technician.nome.toLowerCase().includes(query.toLowerCase())
@@ -140,8 +140,16 @@ const MenageTechsScreen = () => {
               </Text>
             </Card.Content>
           </TouchableOpacity>
-          <IconButton icon="pencil" size={50} color="#FEC601" onPress={() => handleEdit(item)} />
-          <IconButton icon="delete" size={50} color="red" onPress={() => handleDeleteTechnician(item.id_tecnico)} />
+          <IconButton 
+          icon="pencil" 
+          size={50} 
+          onPress={() => handleEdit(item)} 
+          />
+          <IconButton
+          icon="delete"
+          size={50}
+          onPress={() => handleDeleteTechnician(item.id_tecnico)} 
+          />
         </View>
 
         {isExpanded && (
@@ -195,7 +203,10 @@ const MenageTechsScreen = () => {
 
       {/* Modal de Edição */}
       <Portal>
-        <Modal visible={modalVisible} onDismiss={() => setModalVisible(false)} contentContainerStyle={styles.modalContainer}>
+        <Modal visible={modalVisible} 
+               onDismiss={() => setModalVisible(false)}
+               contentContainerStyle={styles.modalContainer}
+        >
           <Title style={styles.modalTitle}>Editar Técnico</Title>
           <TextInput
             label="Nome"
@@ -226,7 +237,10 @@ const MenageTechsScreen = () => {
         </Modal>
 
         {/* Modal de Adição */}
-        <Modal visible={addModalVisible} onDismiss={() => setAddModalVisible(false)} contentContainerStyle={styles.modalContainer}>
+        <Modal visible={addModalVisible} 
+               onDismiss={() => setAddModalVisible(false)} 
+               contentContainerStyle={styles.modalContainer}
+        >
           <Title style={styles.modalTitle}>Adicionar Técnico</Title>
           <TextInput
             label="Nome"
@@ -389,4 +403,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MenageTechsScreen;
+export default ManageTechsScreen;

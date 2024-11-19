@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, Text, Alert, ActivityIndicator, FlatList } from 'react-native';
 import { Card, Title, Paragraph, IconButton, Modal, TextInput, Button, Portal, Searchbar } from 'react-native-paper';
 import { api } from '../api/api';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useFocusEffect } from '@react-navigation/native';
 
-const MenageUsersScreen = () => {
+const ManageUsersScreen = () => {
   const [loading, setLoading] = useState(false);
   const [operators, setOperators] = useState([]);
-  const [searchQuerry, setSearchQuerry] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedOperatorId, setExpandedOperatorId] = useState(null);
   const [editingOperator, setEditingOperator] = useState(null);
@@ -16,29 +15,29 @@ const MenageUsersScreen = () => {
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [formData, setFormData] = useState({ nome: '', horario_de_trabalho: '', id_maquina: '' });
 
+  // Função centralizada para buscar todos os operadores
+  const fetchOperators = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/getoperadores');
+
+      if (response.data.operadores.length === 0) {
+        Alert.alert('Aviso', 'Nenhum operador encontrado.');
+      }
+
+      setOperators(response.data.operadores);
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro', 'Erro ao buscar os operadores.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);	
+
   useFocusEffect(
-    React.useCallback(() => {
-      const fetchOperators = async () => {
-        try {
-          setLoading(true);
-          const response = await api.get(`/getoperadores`);
-
-          if (response.data.operadores.length === 0) {
-            Alert.alert('Aviso', 'Nenhum operador foi encontrado.');
-          }
-
-          setOperators(response.data.operadores);
-          setSearchQuerry(response.data.operadores);
-        } catch (error) {
-          console.error(error);
-          Alert.alert('Erro', 'Erro ao buscar os operadores.');
-        } finally {
-          setLoading(false);
-        }
-      };
-
+    useCallback(() => {
       fetchOperators();
-    }, [])
+    }, [fetchOperators])
   );
 
   const toggleCard = (id) => {
@@ -51,29 +50,22 @@ const MenageUsersScreen = () => {
       nome: operator.nome,
       horario_de_trabalho: operator.horario_de_trabalho,
       id_maquina: operator.id_maquina,
-    });
+    })
     setModalVisible(true);
   };
 
   const handleSave = async () => {
     try {
-      const response = await api.put(`/updateoperador`, {
+      await api.put(`/updateoperador`, {
         id_operador: editingOperator.id_operador,
         nome: formData.nome,
         horario_de_trabalho: formData.horario_de_trabalho,
         id_maquina: formData.id_maquina,
       });
 
-      const updatedOperators = operators.map((operator) =>
-        operator.id_operador === editingOperator.id_operador
-          ? { ...operator, ...formData }
-          : operator
-      );
-
-      setOperators(updatedOperators);
-      setSearchQuerry(updatedOperators);
+      fetchOperators();
       setModalVisible(false);
-      Alert.alert('Sucesso', 'Dados do operador atualizados com sucesso!');
+      Alert.alert('Sucesso', 'Operador atualizado com sucesso!');
     } catch (error) {
       console.error(error);
       Alert.alert('Erro', 'Erro ao atualizar o operador.');
@@ -82,20 +74,17 @@ const MenageUsersScreen = () => {
 
   const handleAddOperator = async () => {
     try {
-      const response = await api.post(`/createoperador`, {
-        nome: formData.nome,
-        horario_de_trabalho: formData.horario_de_trabalho,
-        id_maquina: formData.id_maquina,
-      });
+      await api.post('/createoperador', formData);
 
-      const newOperator = response.data.operador;
-      setOperators([...operators, newOperator]);
-      setSearchQuerry([...operators, newOperator]);
+      setFormData({ nome: '', horario_de_trabalho: '', id_maquina: '' });
       setAddModalVisible(false);
+
+      fetchOperators();
+
       Alert.alert('Sucesso', 'Operador adicionado com sucesso!');
     } catch (error) {
       console.error(error);
-      Alert.alert('Erro', 'Erro ao adicionar operador.');
+      Alert.alert('Erro', 'Erro ao adicionar o operador.');
     }
   };
 
@@ -107,11 +96,8 @@ const MenageUsersScreen = () => {
         style: 'destructive',
         onPress: async () => {
           try {
-            await api.delete(`/deleteoperador`, { data: { id_operador } });
-
-            const updatedOperators = operators.filter((op) => op.id_operador !== id_operador);
-            setOperators(updatedOperators);
-            setSearchQuerry(updatedOperators);
+            await api.delete('/deleteoperador', { data: { id_operador } });
+            fetchOperators();
             Alert.alert('Sucesso', 'Operador excluído com sucesso!');
           } catch (error) {
             console.error(error);
@@ -125,18 +111,17 @@ const MenageUsersScreen = () => {
   const handleSearch = (query) => {
     setSearchQuery(query);
     if (query.trim() === '') {
-      setSearchQuerry(operators);
+      fetchOperators();
     } else {
       const filtered = operators.filter((operator) =>
         operator.nome.toLowerCase().includes(query.toLowerCase())
       );
-      setSearchQuerry(filtered);
+      setOperators(filtered);
     }
   };
 
   const renderOperator = ({ item }) => {
     const isExpanded = expandedOperatorId === item.id_operador;
-
     return (
       <Card style={styles.card}>
         <View style={styles.cardHeader}>
@@ -150,10 +135,17 @@ const MenageUsersScreen = () => {
               </Text>
             </Card.Content>
           </TouchableOpacity>
-          <IconButton icon="pencil" size={50}  onPress={() => handleEdit(item)} />
-          <IconButton icon="delete" size={50}  onPress={() => handleDeleteOperator(item.id_operador)} />
+          <IconButton
+            icon="pencil"
+            size={50}
+            onPress={() => handleEdit(item)}
+          />
+          <IconButton
+            icon="delete"
+            size={50}
+            onPress={() => handleDeleteOperator(item.id_operador)}
+          />
         </View>
-
         {isExpanded && (
           <Card.Content style={styles.detailsContainer}>
             <Title style={styles.details}>Detalhes do Operador:</Title>
@@ -189,7 +181,7 @@ const MenageUsersScreen = () => {
           }}
           style={styles.addButton}
         >
-        <Text style={styles.addText}>  Adicionar Operador </Text>
+        <Text style={styles.addText}> Adicionar Operador </Text>
         </Button>
         {loading ? (
           <ActivityIndicator size="large" color="#000" />
@@ -203,9 +195,13 @@ const MenageUsersScreen = () => {
         )}
       </View>
 
-      {/* Modal de Edição */}
+      {/* Modal de Edição/Adição */}
       <Portal>
-        <Modal visible={modalVisible} onDismiss={() => setModalVisible(false)} contentContainerStyle={styles.modalContainer}>
+        <Modal
+          visible={modalVisible}
+          onDismiss={() => setModalVisible(false)}
+          contentContainerStyle={styles.modalContainer}
+        >
           <Title style={styles.modalTitle}>Editar Operador</Title>
           <TextInput
             label="Nome"
@@ -229,14 +225,20 @@ const MenageUsersScreen = () => {
             <Button mode="contained" onPress={handleSave} style={styles.saveButton}>
               Salvar
             </Button>
-            <Button mode="contained" onPress={() => setModalVisible(false)} style={styles.cancelButton}>
+            <Button
+              mode="contained"
+              onPress={() => setModalVisible(false)} style={styles.cancelButton}>
               Cancelar
             </Button>
           </View>
         </Modal>
 
         {/* Modal de Adição */}
-        <Modal visible={addModalVisible} onDismiss={() => setAddModalVisible(false)} contentContainerStyle={styles.modalContainer}>
+        <Modal
+          visible={addModalVisible}
+          onDismiss={() => setAddModalVisible(false)}
+          contentContainerStyle={styles.modalContainer}
+        >
           <Title style={styles.modalTitle}>Adicionar Operador</Title>
           <TextInput
             label="Nome"
@@ -260,7 +262,11 @@ const MenageUsersScreen = () => {
             <Button mode="contained" onPress={handleAddOperator} style={styles.saveButton}>
               Adicionar
             </Button>
-            <Button mode="contained" onPress={() => setAddModalVisible(false)} style={styles.cancelButton}>
+            <Button
+              mode="contained"
+              onPress={() => setAddModalVisible(false)}
+              style={styles.cancelButton}
+            >
               Cancelar
             </Button>
           </View>
@@ -399,4 +405,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MenageUsersScreen;
+export default ManageUsersScreen;

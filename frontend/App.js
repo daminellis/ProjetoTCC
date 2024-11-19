@@ -12,7 +12,7 @@ import HomeTecnicoScreen from './screens/HomeTecnicoScreen';
 import MaintenceScreen from './screens/MaintenceScreen'; 
 import HomeAdminScreen from './screens/HomeAdminScreen';
 import ManageUsers from './screens/ManageUsers';
-import MenageTechs from './screens/MenageTechs';
+import MenageTechs from './screens/ManageTechs';
 
 import { UserProvider, useUser } from './contexts/UserContext';
 import { Provider as PaperProvider } from 'react-native-paper';
