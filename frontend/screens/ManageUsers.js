@@ -8,7 +8,7 @@ import { useFocusEffect } from '@react-navigation/native';
 const MenageUsersScreen = () => {
   const [loading, setLoading] = useState(false);
   const [operators, setOperators] = useState([]);
-  const [filteredOperators, setFilteredOperators] = useState([]);
+  const [searchQuerry, setSearchQuerry] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedOperatorId, setExpandedOperatorId] = useState(null);
   const [editingOperator, setEditingOperator] = useState(null);
@@ -28,7 +28,7 @@ const MenageUsersScreen = () => {
           }
 
           setOperators(response.data.operadores);
-          setFilteredOperators(response.data.operadores);
+          setSearchQuerry(response.data.operadores);
         } catch (error) {
           console.error(error);
           Alert.alert('Erro', 'Erro ao buscar os operadores.');
@@ -71,7 +71,7 @@ const MenageUsersScreen = () => {
       );
 
       setOperators(updatedOperators);
-      setFilteredOperators(updatedOperators);
+      setSearchQuerry(updatedOperators);
       setModalVisible(false);
       Alert.alert('Sucesso', 'Dados do operador atualizados com sucesso!');
     } catch (error) {
@@ -90,7 +90,7 @@ const MenageUsersScreen = () => {
 
       const newOperator = response.data.operador;
       setOperators([...operators, newOperator]);
-      setFilteredOperators([...operators, newOperator]);
+      setSearchQuerry([...operators, newOperator]);
       setAddModalVisible(false);
       Alert.alert('Sucesso', 'Operador adicionado com sucesso!');
     } catch (error) {
@@ -111,7 +111,7 @@ const MenageUsersScreen = () => {
 
             const updatedOperators = operators.filter((op) => op.id_operador !== id_operador);
             setOperators(updatedOperators);
-            setFilteredOperators(updatedOperators);
+            setSearchQuerry(updatedOperators);
             Alert.alert('Sucesso', 'Operador excluído com sucesso!');
           } catch (error) {
             console.error(error);
@@ -125,12 +125,12 @@ const MenageUsersScreen = () => {
   const handleSearch = (query) => {
     setSearchQuery(query);
     if (query.trim() === '') {
-      setFilteredOperators(operators);
+      setSearchQuerry(operators);
     } else {
       const filtered = operators.filter((operator) =>
         operator.nome.toLowerCase().includes(query.toLowerCase())
       );
-      setFilteredOperators(filtered);
+      setSearchQuerry(filtered);
     }
   };
 
@@ -195,7 +195,7 @@ const MenageUsersScreen = () => {
           <ActivityIndicator size="large" color="#000" />
         ) : (
           <FlatList
-            data={filteredOperators}
+            data={operators}
             keyExtractor={(item) => item.id_operador.toString()}
             renderItem={renderOperator}
             ListEmptyComponent={<Text style={styles.noDataText}>Nenhum operador encontrado.</Text>}
