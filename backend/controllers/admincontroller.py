@@ -272,3 +272,75 @@ def create_tecnico():
     except SQLAlchemyError as e:
         error = str(e.__dict__['orig'])
         return jsonify({"success": False, "error": error}), 500
+    
+def get_all_logs():
+    try:
+        with db.engine.connect() as connection:
+            sql = text("SELECT * FROM logs")
+            result = connection.execute(sql)
+            logs = result.fetchall()
+
+        logs_lista = [
+            {key: serialize_value(value) for key, value in row._mapping.items()}
+            for row in logs
+        ]
+
+        if logs_lista:
+            return jsonify({
+                "success": True,
+                "logs": logs_lista
+            }), 200
+        else:
+            return jsonify({
+                "success": False,
+                "error": "Logs não encontrados"
+            }), 404
+        
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        return jsonify({'error': error}), 500
+    
+def define_logs():
+    try:
+        data = request.json
+        id_operador = data.get('id_operador')
+        id_tecnico = data.get('id_tecnico')
+        id_maquina = data.get('id_maquina')
+        descricao = data.get('descricao')
+        id_log = data.get('id_log')
+        data_criacao = data.get('data_criacao')
+
+        status = "Atibuido"
+
+        if not all([id_operador, id_tecnico, id_maquina, descricao, id_log, data_criacao]):
+            return jsonify({"success": False, "error": "Dados incompletos"}), 400
+
+        with db.engine.connect() as connection:
+            define_logs_sql = text("""
+                INSERT INTO manutencoes (id_operador, id_tecnico, id_maquina, descricao, status, data_criacao)
+                VALUES (:id_operador,:id_tecnico, :id_maquina, :descricao, :status, :data_criacao)
+            """)
+            connection.execute(define_logs_sql, {
+                'id_operador': id_operador,
+                'id_tecnico': id_tecnico,
+                'id_maquina': id_maquina,
+                'descricao': descricao,
+                'status': status,
+                'data_criacao': data_criacao
+            })
+            connection.commit()
+            
+            set_status_log = text("""
+                UPDATE logs SET status = :status WHERE id_log = :id_log
+            """)
+            connection.execute(set_status_log, {
+                'id_log': id_log,
+                'status': status
+            })
+            connection.commit()
+
+        return jsonify({"success": True, "message": "Log definido com sucesso!"}), 200
+
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        return jsonify({"success": False, "error": error}), 500

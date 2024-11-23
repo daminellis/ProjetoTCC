@@ -9,6 +9,7 @@ class Log(db.Model):
     descricao = db.Column(db.Text, nullable=False)
     criado_em = db.Column(db.DateTime, default=db.func.current_timestamp(), nullable=False)
     gravidade = db.Column(db.Integer, nullable=False)  
+    status = db.Column(db.varchar(255))
 
     # Método para retornar um dicionário com os dados
     def to_dict(self):
@@ -18,6 +19,7 @@ class Log(db.Model):
             'id_maquina': self.id_maquina,
             'descricao': self.descricao,
             'criado_em': self.criado_em.isoformat(),
-            'gravidade': self.gravidade,  
+            'gravidade': self.gravidade,
+            'status': self.status,
             'tabela': 'logs' 
         }
