@@ -14,6 +14,7 @@ import HomeAdminScreen from './screens/HomeAdminScreen';
 import ManageUsers from './screens/ManageUsers';
 import MenageTechs from './screens/ManageTechs';
 import ManageWorks from './screens/ManageWorks';
+import MenageMachines from './screens/MenageMachines';
 
 import { UserProvider, useUser } from './contexts/UserContext';
 import { Provider as PaperProvider } from 'react-native-paper';
@@ -99,6 +100,7 @@ const DrawerNavigatorAdmin = () => {
         <Drawer.Screen name="Gerenciar Operadores" component={ManageUsers} /> 
         <Drawer.Screen name="Gerenciar Técnicos" component={MenageTechs} />
         <Drawer.Screen name="Gerenciar Trabalhos" component={ManageWorks} />
+        <Drawer.Screen name="Gerenciar Máquinas" component={MenageMachines} />
       </Drawer.Navigator>
     </PaperProvider>
   );
