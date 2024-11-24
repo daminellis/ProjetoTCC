@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, FlatList, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, FlatList, ActivityIndicator, Alert, TouchableOpacity, TextInput, Button } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useUser } from '../contexts/UserContext';
 import { api } from '../api/api';
 import { Card } from 'react-native-paper';
@@ -10,6 +11,9 @@ const HomeTecnicoScreen = () => {
   const [userName, setUserName] = useState('');
   const [serviceOrders, setServiceOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [machineId, setMachineId] = useState('');
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Efeito para buscar o nome do usuário
   useFocusEffect(
@@ -30,7 +34,7 @@ const HomeTecnicoScreen = () => {
         }
       };
       fetchUserName();
-    }, [user]) // Dependência para atualizar quando o usuário muda
+    }, [user])
   );
 
   // Efeito para buscar ordens de serviço
@@ -41,12 +45,7 @@ const HomeTecnicoScreen = () => {
         try {
           const response = await api.get(`/allserviceorders`);
           if (response.data && response.data.service_orders) {
-            if (Array.isArray(response.data.service_orders)) {
-              setServiceOrders(response.data.service_orders);
-            } else {
-              console.error("service_orders não é um array:", response.data.service_orders);
-              Alert.alert("Erro", "Dados inesperados recebidos da API.");
-            }
+            setServiceOrders(response.data.service_orders);
           } else {
             console.error("Resposta inesperada da API:", response.data);
             Alert.alert("Erro", "Resposta inesperada da API.");
@@ -59,7 +58,7 @@ const HomeTecnicoScreen = () => {
         }
       };
       fetchServiceOrders();
-    }, []) //sem dependências para buscar sempre que abrir a tela
+    }, [])
   );
 
   const [expandedOrderId, setExpandedOrderId] = useState(null);
@@ -79,7 +78,7 @@ const HomeTecnicoScreen = () => {
               <Text style={styles.label}>Máquina ID:</Text> {item.id_maquina}
             </Text>
             <Text style={styles.orderText}>
-              <Text style={styles.label}>Criado Em:</Text> {new Date(item.criado_em).toLocaleString('pt-BR')} {/* Formatação dd/mm/yyyy HH:mm:ss */}
+              <Text style={styles.label}>Criado Em:</Text> {new Date(item.criado_em).toLocaleString('pt-BR')}
             </Text>
 
             {isExpanded && (
@@ -88,10 +87,10 @@ const HomeTecnicoScreen = () => {
                   <Text style={styles.label}>ID do Log:</Text> {item.id_log}</Text>
                 <Text style={styles.detailText}>
                   <Text style={styles.label}>Descrição:</Text> {item.descricao}</Text>
-                <Text style={styles.detailText}
-                ><Text style={styles.label}>Operador ID:</Text> {item.id_operador}</Text>
                 <Text style={styles.detailText}>
-                  <Text style={styles.label}>Criado Em:</Text> {new Date(item.criado_em).toLocaleString('pt-BR')} {/* Formatação dd/mm/yyyy HH:mm:ss */}
+                  <Text style={styles.label}>Operador ID:</Text> {item.id_operador}</Text>
+                <Text style={styles.detailText}>
+                  <Text style={styles.label}>Criado Em:</Text> {new Date(item.criado_em).toLocaleString('pt-BR')}
                 </Text>
               </View>
             )}
@@ -101,6 +100,22 @@ const HomeTecnicoScreen = () => {
     );
   };
 
+  const filteredServiceOrders = serviceOrders.filter(order => {
+    const orderMachineId = order.id_maquina?.toString(); // Garante que id_maquina seja string ou null
+    
+    // Aplica filtro para ID da máquina
+    const matchesMachineId = machineId ? orderMachineId?.includes(machineId) : true;
+  
+    // Aplica filtro para data
+    const matchesDate = selectedDate
+      ? new Date(order.criado_em).toDateString() === new Date(selectedDate).toDateString()
+      : true;
+  
+    return matchesMachineId && matchesDate;
+  });
+  
+  
+
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
@@ -109,14 +124,40 @@ const HomeTecnicoScreen = () => {
       <View style={styles.content}>
         <Image source={require('../assets/logo.png')} style={styles.logo} />
         <Text style={styles.monitoringText}>Ferramenta de monitoramento técnico</Text>
-        
+
+        <View style={styles.searchContainer}>
+          <TextInput
+            placeholder="ID da Máquina"
+            style={styles.input}
+            value={machineId}
+            onChangeText={setMachineId}
+          />
+          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+            <Text style={styles.dateInput}>
+              {selectedDate ? new Date(selectedDate).toLocaleDateString('pt-BR') : 'Selecionar Data'}
+            </Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={selectedDate || new Date()}
+              mode="date"
+              display="calendar"
+              onChange={(event, date) => {
+                setShowDatePicker(false);
+                if (date) setSelectedDate(date);
+              }}
+            />
+          )}
+          <Button title="Limpar Filtros" onPress={() => { setMachineId(''); setSelectedDate(null); }} />
+        </View>
+
         {loading ? (
           <ActivityIndicator size="large" color="#000" />
-        ) : serviceOrders.length === 0 ? (
-          <Text style={styles.noDataText}>Nenhum pedido de serviço disponível.</Text>
+        ) : filteredServiceOrders.length === 0 ? (
+          <Text style={styles.noDataText}>Nenhum pedido de serviço encontrado.</Text>
         ) : (
           <FlatList
-            data={serviceOrders}
+            data={filteredServiceOrders}
             renderItem={renderServiceOrder}
             keyExtractor={item => item.id_log.toString()}
             contentContainerStyle={styles.listContainer}
@@ -129,6 +170,31 @@ const HomeTecnicoScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  // Adicione os estilos para input e botões de pesquisa
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  input: {
+    width: 150,
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    backgroundColor: '#fff',
+    marginRight: 10,
+  },
+  dateInput: {
+    fontSize: 16,
+    color: '#FEC601',
+    borderBottomWidth: 3,
+    borderColor: '#ccc',
+    paddingHorizontal: 10,
+    textAlign: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: '#FEC601',
