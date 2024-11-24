@@ -344,3 +344,5 @@ def define_logs():
     except SQLAlchemyError as e:
         error = str(e.__dict__['orig'])
         return jsonify({"success": False, "error": error}), 500
+
+# DATA CRIACAO É DO MANUTENCOES E É CRIADO NA HORA DA ATRIBUICAO E CRIADO EM É DO LOGS QUANDO O USUARIO CRIOU O LOG

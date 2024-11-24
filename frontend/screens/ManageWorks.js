@@ -74,23 +74,28 @@ const ManageLogsScreen = () => {
       return;
     }
   
-    // Aqui, estamos pegando todos os dados do log e preparando-os para enviar ao backend.
-    const { id_log, id_operador, id_maquina, descricao, criado_em, gravidade, data_criacao } = editingLog;
+    const formatDateTime = (date) => {
+      const pad = (n) => (n < 10 ? '0' + n : n);
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    };
+    
+    const dataCriacao = formatDateTime(new Date());
+    
+    const { id_log, id_operador, id_maquina, descricao } = editingLog;
   
     try {
       // Enviamos os dados no formato que o backend espera
       const response = await api.post('/definelogs', {
-        id_operador,         // ID do operador
+        id_operador,          // ID do operador
         id_tecnico: selectedTechnicianId,  // ID do técnico selecionado
-        id_maquina,          // ID da máquina
-        descricao,           // Descrição do log
-        id_log,              // ID do log
-        gravidade,           // Gravidade do log
-        data_criacao,        // Data de criação do log
+        id_maquina,           // ID da máquina
+        descricao,            // Descrição do log
+        id_log,               // ID do log
+        data_criacao: dataCriacao, // Data de criação gerada no momento da atribuição
       });
   
       if (response.data.success) {
-        fetchLogs(); 
+        fetchLogs();
         setModalVisible(false);
         Alert.alert('Sucesso', 'Log atualizado e atribuído com sucesso!');
       } else {
@@ -101,6 +106,7 @@ const ManageLogsScreen = () => {
       Alert.alert('Erro', 'Erro ao atribuir o log.');
     }
   };
+  
   
   const renderLog = ({ item }) => (
     <Card style={styles.card}>
