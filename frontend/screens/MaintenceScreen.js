@@ -52,13 +52,13 @@ const TechnicianTasksScreen = () => {
   const handleEditOrder = (order) => {
     setSelectedOrder(order);
     setEditedDescription(order.descricao);
-    setEditedCost(order.custo_de_peca.toString());
+    setEditedCost(order.custo_de_peca != null ? order.custo_de_peca.toString() : ''); 
     setEditedStatus(order.status);
-    setEditedStartDate(new Date(order.inicio_da_manutencao).toISOString().slice(0, 16)); // Formato YYYY-MM-DDTHH:MM
-    setEditedEndDate(new Date(order.termino_da_manutencao).toISOString().slice(0, 16)); // Formato YYYY-MM-DDTHH:MM
+    setEditedStartDate(order.inicio_da_manutencao ? new Date(order.inicio_da_manutencao).toISOString().slice(0, 16) : ''); 
+    setEditedEndDate(order.termino_da_manutencao ? new Date(order.termino_da_manutencao).toISOString().slice(0, 16) : ''); 
     setVisible(true);
   };
-
+  
   const hideModal = () => {
     setVisible(false);
     setSelectedOrder(null);
@@ -166,7 +166,7 @@ const TechnicianTasksScreen = () => {
           <TouchableOpacity onPress={() => toggleCard(item.id_manutencao)} style={{ flex: 1 }}>
             <Card.Content>
               <Text style={styles.cardActionText}>
-                <Text style={styles.label}>Data:</Text> {new Date(item.inicio_da_manutencao).toLocaleDateString('pt-BR')}
+                <Text style={styles.label}>Data de criação:</Text> {new Date(item.data_criacao).toLocaleDateString('pt-BR')}
               </Text>
               <Text style={styles.cardActionText}>
                 <Text style={styles.label}>ID Máquina:</Text> {item.id_maquina}
