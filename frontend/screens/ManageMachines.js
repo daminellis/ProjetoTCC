@@ -152,9 +152,120 @@ const renderMachine = ({ item }) => {
                 </Card.Content>
             )}
         </Card>
-    );
-};
+      );
+    };
 
+  return (
+    <View style={styles.container}>
+      <View style={styles.topBar}>
+          <Text style={styles.title}>Gerenciar Máquinas</Text>
+      </View>
+        <Searchbar
+          placeholder="Pesquisar por nome"
+          style={styles.searchbar}
+          onChangeText={handleSearch}
+          value={searchQuery}
+        />
+        <View style={styles.content}>
+          <Button
+            mode='contained'
+            onPress={() => {
+              setFormData({ nome_maquina: '', local: '' });
+              setAddModalVisible(true);
+            }}
+            style={styles.addButton}
+          >
+          <Text style={styles.addText}>Adicionar Máquina</Text>
+          </Button>
+          {loading ? (
+            <ActivityIndicator size='large' color='white' />
+          ) : machines.length === 0 ? (
+            <Text style={styles.noDataText}>Nenhuma máquina encontrada.</Text>
+          ) : (
+            <FlatList
+              data={machines}
+              keyExtractor={(item) => item.id_maquina.toString()}
+              renderItem={renderMachine}
+            />
+          )}
+        </View>
+
+        <Portal>
+          <Modal
+            visible={modalVisible}
+            onDismiss={() => setModalVisible(false)}
+            contentContainerStyle={styles.modalContainer}
+          >
+            <Title style={styles.modalTitle}>Editar Maquinas</Title>
+            <TextInput
+              label='Nome da Máquina'
+              value={formData.nome_maquina}
+              onChangeText={(text) => setFormData({ ...formData, nome_maquina: text })}
+              style={styles.input}
+            />
+            <TextInput
+              label='Local'
+              value={formData.local}
+              onChangeText={(text) => setFormData({ ...formData, local: text })}
+              style={styles.input}
+            />
+            <View style={styles.buttonContainer}>
+              <Button
+                mode='contained'
+                onPress={handleSave}
+                style={styles.saveButton}
+              >
+                <Text style={styles.buttonText}>Salvar</Text>
+              </Button>
+              <Button
+                mode='contained'
+                onPress={() => setModalVisible(false)}
+                style={styles.cancelButton}
+              >
+                <Text style={styles.buttonText}>Cancelar</Text>
+              </Button>
+            </View>
+          </Modal>
+
+          <Modal
+            visible={addModalVisible}
+            onDismiss={() => setAddModalVisible(false)}
+            contentContainerStyle={styles.modalContainer}
+          >
+            <Title style={styles.modalTitle}>Adicionar Máquina</Title>
+            <TextInput
+              label='Nome da Máquina'
+              value={formData.nome_maquina}
+              onChangeText={(text) => setFormData({ ...formData, nome_maquina: text })}
+              style={styles.input}
+            />
+            <TextInput
+              label='Local'
+              value={formData.local}
+              onChangeText={(text) => setFormData({ ...formData, local: text })}
+              style={styles.input}
+            />
+            <View style={styles.buttonContainer}>
+              <Button
+                mode='contained'
+                onPress={handleAddMachine}
+                style={styles.saveButton}
+              >
+                <Text style={styles.buttonText}>Adicionar</Text>
+              </Button>
+              <Button
+                mode='contained'
+                onPress={() => setAddModalVisible(false)}
+                style={styles.cancelButton}
+              >
+                <Text style={styles.buttonText}>Cancelar</Text>
+              </Button>
+            </View>
+          </Modal>
+        </Portal>
+      </View>
+    );
+  };
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -283,7 +394,5 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
 });
-
-};
 
 export default ManageMachinesScreen;
