@@ -331,10 +331,13 @@ def define_logs():
             connection.commit()
             
             set_status_log = text("""
-                UPDATE logs SET status = :status WHERE id_log = :id_log
+                UPDATE logs
+                SET status = :status, id_tecnico = :id_tecnico
+                WHERE id_log = :id_log;
             """)
             connection.execute(set_status_log, {
                 'id_log': id_log,
+                'id_tecnico': id_tecnico,
                 'status': status
             })
             connection.commit()
