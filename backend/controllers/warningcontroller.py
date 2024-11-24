@@ -26,6 +26,36 @@ def get_maquina(id_operador):
         print(f"Erro ao buscar máquina: {error}")
         return jsonify(message="Erro ao buscar máquina"), 500
 
+def get_nome_maquina(id_maquina):
+    try:
+        with db.engine.connect() as connection:
+            # SQL para buscar o nome da máquina
+            sql = text('SELECT nome_maquina FROM maquinas WHERE id_maquina = :id_maquina')
+            result = connection.execute(sql, {'id_maquina': id_maquina})
+            nome_maquina = result.fetchone()
+
+        if nome_maquina:
+            # Retornar o nome da máquina como JSON
+            return jsonify({
+                "success": True,
+                "nome_maquina": nome_maquina[0]
+            }), 200
+        else:
+            # Retornar 404 caso a máquina não seja encontrada
+            return jsonify({
+                "success": False,
+                "error": "Máquina não encontrada"
+            }), 404
+
+    except SQLAlchemyError as e:
+        # Capturar erros de banco de dados e retornar mensagem de erro
+        error = str(e.__dict__['orig'])
+        print(f"Erro ao buscar nome da máquina: {error}")
+        return jsonify({
+            "success": False,
+            "error": "Erro interno no servidor"
+        }), 500
+    
 def get_warnings():
     try:
         with db.engine.connect() as connection:

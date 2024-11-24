@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
 import { useUser } from '../contexts/UserContext';
 import moment from 'moment';
 import { useNavigation } from '@react-navigation/native'; 
@@ -8,91 +8,110 @@ import { api } from '../api/api';
 const HomeScreen = () => {
   const { user } = useUser();
   const [userName, setUserName] = useState('');
+  const [machineName, setMachineName] = useState('...');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [remainingTime, setRemainingTime] = useState('...');
-  const [machineName] = useState('máaquina');
   const navigation = useNavigation(); 
 
   useEffect(() => {
-    let intervalId; // Variável para armazenar o ID do intervalo
-  
-    if (user?.id_operador) {
-      const fetchUserName = async () => {
-        try {
-          const response = await api.get(`/users/${user.id_operador}`);
-          if (response.data.success) {
-            setUserName(response.data.user.nome);
-  
-            const updateRemainingTime = () => {
-              const workStartTime = moment(response.data.user.horario_de_trabalho, 'HH:mm:ss');
-              const currentTime = moment();
-              const endWorkTime = workStartTime.clone().add(10, 'hours');
-  
-              if (currentTime.isBefore(workStartTime)) {
-                setRemainingTime('Expediente ainda não começou');
-                Alert.alert(
-                  "Expediente ainda não começou",
-                  "Por favor, aguarde o início do expediente",
-                  [
-                    {
-                      text: "OK",
-                      onPress: () => navigation.navigate('Login')
-                    }
-                  ]
-                );
-                return;
-              }
-  
-              const remaining = moment.duration(endWorkTime.diff(currentTime));
-  
-              if (remaining.asMinutes() > 0) {
-                const hours = Math.floor(remaining.asHours());
-                const minutes = Math.floor(remaining.minutes());
-                setRemainingTime(`${hours} horas e ${minutes} minutos`);
-              } else {
-                setRemainingTime('Expediente encerrado');
-                Alert.alert(
-                  "Seu expediente acabou",
-                  "Bom descanso e até amanhã!",
-                  [
-                    {
-                      text: "OK",
-                      onPress: () => navigation.navigate('Login')
-                    }
-                  ]
-                );
-                return;
-              }
-            };
-  
-            // Atualizar o tempo restante na primeira vez que o componente monta
-            updateRemainingTime();
-  
-            // Atualizar o tempo restante a cada 1 minuto
-            intervalId = setInterval(updateRemainingTime, 60000); // 60000ms = 1 minuto
-          } else {
-            setError(response.data.error);
-          }
-        } catch (error) {
-          setError('Erro na requisição');
-          console.error(error);
-        } finally {
-          setLoading(false);
+    let intervalId;
+
+    const fetchUserDetails = async () => {
+      try {
+        // Buscar o nome do usuário
+        const userResponse = await api.get(`/users/${user.id_operador}`);
+        if (userResponse.data.success) {
+          setUserName(userResponse.data.user.nome);
+        } else {
+          throw new Error(userResponse.data.error || 'Erro ao buscar dados do usuário');
         }
-      };
-  
-      fetchUserName();
+
+        // Buscar a máquina associada ao operador
+        // Verificar se monitorResponse tem o ID da máquina
+        const monitorResponse = await api.get(`/monitores/${user.id_operador}`);
+        const id_maquina = monitorResponse?.data?.id_maquina;
+
+        if (id_maquina) {
+          // Buscar o nome da máquina com id_maquina válido
+          const machineResponse = await api.get(`/users/nome_maquina/${id_maquina}`);
+          const nome_maquina = machineResponse?.data?.nome_maquina;
+
+          if (nome_maquina) {
+            setMachineName(nome_maquina);
+          } else {
+            throw new Error('Nome da máquina não encontrado');
+          }
+        } else {
+          throw new Error('ID da máquina não encontrado');
+        }
+        // Atualizar o tempo restante
+        const updateRemainingTime = () => {
+          const workStartTime = moment(userResponse.data.user.horario_de_trabalho, 'HH:mm:ss');
+          const currentTime = moment();
+          const endWorkTime = workStartTime.clone().add(10, 'hours');
+
+          if (currentTime.isBefore(workStartTime)) {
+            setRemainingTime('Expediente ainda não começou');
+            Alert.alert(
+              "Expediente ainda não começou",
+              "Por favor, aguarde o início do expediente",
+              [
+                {
+                  text: "OK",
+                  onPress: () => navigation.navigate('Login'),
+                },
+              ]
+            );
+            return;
+          }
+
+          const remaining = moment.duration(endWorkTime.diff(currentTime));
+
+          if (remaining.asMinutes() > 0) {
+            const hours = Math.floor(remaining.asHours());
+            const minutes = Math.floor(remaining.minutes());
+            setRemainingTime(`${hours} horas e ${minutes} minutos`);
+          } else {
+            setRemainingTime('Expediente encerrado');
+            Alert.alert(
+              "Seu expediente acabou",
+              "Bom descanso e até amanhã!",
+              [
+                {
+                  text: "OK",
+                  onPress: () => navigation.navigate('Login'),
+                },
+              ]
+            );
+            return;
+          }
+        };
+
+        // Atualizar tempo restante ao montar o componente
+        updateRemainingTime();
+
+        // Atualizar tempo restante a cada 1 minuto
+        intervalId = setInterval(updateRemainingTime, 60000);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user?.id_operador) {
+      fetchUserDetails();
     } else {
       setLoading(false);
     }
-  
+
     return () => {
       if (intervalId) {
-        clearInterval(intervalId); // Limpar o intervalo ao desmontar o componente
+        clearInterval(intervalId);
       }
     };
-  }, [user, navigation]);  
+  }, [user, navigation]);
 
   if (loading) {
     return (
