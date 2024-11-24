@@ -330,6 +330,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginVertical: 10,
+    marginHorizontal: 200,
   },
 });
 
