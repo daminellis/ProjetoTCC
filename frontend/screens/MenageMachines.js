@@ -18,7 +18,7 @@ const [loading, setLoading] = useState(false);
 const fetchMachines = useCallback(async () => {
     try {
         setLoading(true);
-        const response = await api.get('/getmaquinas');
+        const response = await api.get('/getallmaquinas');
 
         if (response.data.maquinas.length === 0) {
             Alert.alert('Aviso', 'Nenhuma máquina encontrada.');
@@ -54,7 +54,7 @@ const handleEdit = (machine) => {
 
 const handleSave = async () => {
     try {
-        await api.put(`/updatemaquina`, {
+        await api.put(`/updatemaquinas`, {
             id_maquina: editingMachine.id_maquina,
             nome_maquina: formData.nome_maquina,
             local: formData.local,
@@ -71,7 +71,7 @@ const handleSave = async () => {
 
 const handleAddMachine = async () => {
     try {
-        await api.post('/createmaquina', formData);
+        await api.post('/createmaquinas', formData);
 
         setFormData({ nome_maquina: '', local: '' });
         setAddModalVisible(false);
@@ -93,7 +93,7 @@ const handleDeleteMachine = async (id_maquina) => {
             style: 'destructive',
             onPress: async () => {
                 try {
-                    await api.delete('/deletemaquina', { data: { id_maquina } });
+                    await api.delete('/deletemaquinas', { data: { id_maquina } });
                     fetchMachines();
                     Alert.alert('Sucesso', 'Máquina excluída com sucesso!');
                 } catch (error) {

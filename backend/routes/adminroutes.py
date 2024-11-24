@@ -1,17 +1,21 @@
 from controllers.admincontroller import get_tecnicos
 from controllers.admincontroller import get_operadores 
+from controllers.admincontroller import get_all_machines
 
 from controllers.admincontroller import update_operador
 from controllers.admincontroller import update_tecnico
+from controllers.admincontroller import update_machine
 
 from controllers.admincontroller import delete_operador
 from controllers.admincontroller import delete_tecnico
+from controllers.admincontroller import delete_machine
 
 from controllers.admincontroller import create_operador
 from controllers.admincontroller import create_tecnico
+from controllers.admincontroller import create_machine
+
 
 from controllers.admincontroller import get_all_logs
-
 from controllers.admincontroller import define_logs
 
 def admin(app):
@@ -32,3 +36,13 @@ def admin(app):
     app.route('/getalllogs', methods=['GET'])(get_all_logs)
 
     app.route('/definelogs', methods=['POST', 'PUT'])(define_logs)
+
+    # rotas de gerenciamento de maquinas:
+
+    app.route('/getallmaquinas', methods=['GET'])(get_all_machines)
+
+    app.route('/createmaquinas', methods=['POST'])(create_machine)
+
+    app.route('/deletemaquinas', methods=['DELETE'])(delete_machine)
+
+    app.route('/updatemaquinas', methods=['PUT'])(update_machine)

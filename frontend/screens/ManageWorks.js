@@ -12,6 +12,7 @@ const ManageLogsScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingLog, setEditingLog] = useState(null);
   const [selectedTechnicianId, setSelectedTechnicianId] = useState(null);
+  const [assignedFilter, setAssignedFilter] = useState("all");
 
   // Fetch logs
   const fetchLogs = useCallback(async () => {
@@ -107,12 +108,24 @@ const ManageLogsScreen = () => {
     }
   };
   
+  const filteredLogs = logs.filter((log) => {
+    if (assignedFilter === 'assigned') {
+      return log.id_tecnico; 
+    } else if (assignedFilter === 'unassigned') {
+      return !log.id_tecnico;
+    }
+    return true; 
+  });
+  
   
   const renderLog = ({ item }) => (
     <Card style={styles.card}>
       <Card.Content>
         <Text style={styles.cardActionText}>
           <Text style={styles.label}>ID Log:</Text> {item.id_log}
+        </Text>
+        <Text style={styles.cardActionText}>
+          <Text style={styles.label}>Criado Em:</Text> {item.criado_em}
         </Text>
         <Text style={styles.cardActionText}>
           <Text style={styles.label}>Descrição:</Text> {item.descricao}
@@ -156,18 +169,32 @@ const ManageLogsScreen = () => {
       <View style={styles.topBar}>
         <Text style={styles.title}>Logs</Text>
       </View>
-      <Searchbar
-        placeholder="Pesquisar por status"
-        value={searchQuery}
-        onChangeText={handleSearch}
-        style={styles.searchbar}
-      />
+      <View style={styles.filterContainer}>
+        <Button
+          mode={assignedFilter === 'all' ? 'contained' : 'outlined'}
+          onPress={() => setAssignedFilter('all')}
+        >
+          Todos
+        </Button>
+        <Button
+          mode={assignedFilter === 'assigned' ? 'contained' : 'outlined'}
+          onPress={() => setAssignedFilter('assigned')}
+        >
+          Atribuídos
+        </Button>
+        <Button
+          mode={assignedFilter === 'unassigned' ? 'contained' : 'outlined'}
+          onPress={() => setAssignedFilter('unassigned')}
+        >
+          Não Atribuídos
+        </Button>
+      </View>
       <View style={styles.content}>
         {loading ? (
           <ActivityIndicator size="large" color="#000" />
         ) : (
           <FlatList
-            data={logs}
+            data={filteredLogs}
             keyExtractor={(item) => item.id_log.toString()}
             renderItem={renderLog}
             ListEmptyComponent={<Text style={styles.noDataText}>Nenhum log encontrado.</Text>}
@@ -298,6 +325,11 @@ const styles = StyleSheet.create({
   cancelButton: {
     width: '80%',
     backgroundColor: 'gray',
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 10,
   },
 });
 

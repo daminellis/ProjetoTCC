@@ -349,3 +349,105 @@ def define_logs():
         return jsonify({"success": False, "error": error}), 500
 
 # DATA CRIACAO É DO MANUTENCOES E É CRIADO NA HORA DA ATRIBUICAO E CRIADO EM É DO LOGS QUANDO O USUARIO CRIOU O LOG
+
+
+def get_all_machines():
+    try:
+        with db.engine.connect() as connection:
+            sql = text("SELECT * FROM maquinas")
+            result = connection.execute(sql)
+            maquinas = result.fetchall()
+
+        maquinas_lista = [
+            {key: serialize_value(value) for key, value in row._mapping.items()}
+            for row in maquinas
+        ]
+
+        if maquinas_lista:
+            return jsonify({
+                "success": True,
+                "maquinas": maquinas_lista
+            }), 200
+        else:
+            return jsonify({
+                "success": False,
+                "error": "Máquinas não encontradas"
+            }), 404
+        
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        return jsonify({'error': error}), 500
+    
+def create_machine():
+    try:
+       data = request.json
+       nome_maquina = data.get('nome_maquina')
+       local = data.get('local')
+
+       if not all([nome_maquina, local]):
+          return jsonify({"success": False, "error": "Dados incompletos"}), 400
+        
+       with db.engine.connect() as connection:
+              create_machine_sql = text("""
+                INSERT INTO maquinas (nome_maquina, local)
+                VALUES (:nome_maquina, :local)
+              """)
+              connection.execute(create_machine_sql, {
+                'nome_maquina': nome_maquina,
+                'local': local
+              })
+              connection.commit()
+
+       return jsonify({"success": True, "message": "Máquina criada com sucesso!"}), 200
+    
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        return jsonify({"success": False, "error": error}), 500
+    
+def delete_machine():
+    try:
+        data = request.json
+        id_maquina = data.get('id_maquina')
+
+        if not id_maquina:
+            return jsonify({"success": False, "error": "ID da máquina não foi passado"}), 400
+
+        with db.engine.connect() as connection:
+            delete_machine_sql = text("DELETE FROM maquinas WHERE id_maquina = :id_maquina")
+            connection.execute(delete_machine_sql, {'id_maquina': id_maquina})
+            connection.commit()
+
+        return jsonify({"success": True, "message": "Máquina deletada com sucesso!"}), 200
+    
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        return jsonify({"success": False, "error": error}), 500
+    
+def update_machine():
+    try:
+        data = request.json
+        id_maquina = data.get('id_maquina')
+        nome_maquina = data.get('nome_maquina')
+        local = data.get('local')
+
+        if not all([id_maquina, nome_maquina, local]):
+            return jsonify({"success": False, "error": "Dados incompletos"}), 400
+
+        with db.engine.connect() as connection:
+            update_machine_sql = text("""
+                UPDATE maquinas 
+                SET nome_maquina = :nome_maquina, local = :local 
+                WHERE id_maquina = :id_maquina
+            """)
+            connection.execute(update_machine_sql, {
+                'nome_maquina': nome_maquina,
+                'local': local,
+                'id_maquina': id_maquina
+            })
+            connection.commit()
+
+        return jsonify({"success": True, "message": "Máquina atualizada com sucesso!"}), 200
+    
+    except SQLAlchemyError as e:
+        error = str(e.__dict__['orig'])
+        return jsonify({"success": False, "error": error}), 500
