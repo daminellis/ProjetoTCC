@@ -52,7 +52,7 @@ const TechnicianTasksScreen = () => {
   const handleEditOrder = (order) => {
     setSelectedOrder(order);
     setEditedDescription(order.descricao);
-    setEditedCost(order.custo_de_peca != null ? order.custo_de_peca.toString() : ''); 
+    setEditedCost(order.custo_de_peca != null ? order.custo_de_peca.toString() : 'Sem preço indicado'); 
     setEditedStatus(order.status);
     setEditedStartDate(order.inicio_da_manutencao ? new Date(order.inicio_da_manutencao).toISOString().slice(0, 16) : ''); 
     setEditedEndDate(order.termino_da_manutencao ? new Date(order.termino_da_manutencao).toISOString().slice(0, 16) : ''); 
@@ -188,16 +188,16 @@ const TechnicianTasksScreen = () => {
               <Text style={styles.label}>Descrição:</Text> {item.descricao}
             </Paragraph>
             <Paragraph style={styles.detailText}>
-              <Text style={styles.label}>Custo de Peça:</Text> {item.custo_de_peca}
+              <Text style={styles.label}>Custo de Peça:</Text> {item.custo_de_peca !== null ? item.custo_de_peca : 'Não indicado'}            
             </Paragraph>
             <Paragraph style={styles.detailText}>
               <Text style={styles.label}>Status:</Text> {item.status}
             </Paragraph>
             <Paragraph style={styles.detailText}>
-              <Text style={styles.label}>Início:</Text> {new Date(item.inicio_da_manutencao).toLocaleString('pt-BR')}
+              <Text style={styles.label}>Início:</Text> {item.inicio_da_manutencao ? new Date(item.inicio_da_manutencao).toLocaleString('pt-BR') : 'Não Iniciado'}
             </Paragraph>
             <Paragraph style={styles.detailText}>
-              <Text style={styles.label}>Término:</Text> {new Date(item.termino_da_manutencao).toLocaleString('pt-BR')}
+            <Text style={styles.label}>Término:</Text> {item.termino_da_manutencao ? new Date(item.termino_da_manutencao).toLocaleString('pt-BR') : 'Não Finalizado'}
             </Paragraph>
           </Card.Content>
         )}
