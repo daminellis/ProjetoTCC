@@ -20,32 +20,32 @@ const TechnicianTasksScreen = () => {
 
   const [assignedFilter, setAssignedFilter] = useState("all");
 
+  const fetchServiceOrders = async () => {
+    if (!user?.id_tecnico) {
+      Alert.alert('Erro', 'Técnico não autenticado. Por favor, faça login novamente.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await api.get(`/jobsbyid/${user.id_tecnico}`); 
+      
+      if (response.data.service_order.length === 0){
+        Alert.alert('Aviso','Nenhuma ordem de serviço foi encontrada para este técnico');
+      }
+
+      setServiceOrders(response.data.service_order); 
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro', 'Erro ao buscar as ordens de serviço.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useFocusEffect(
     React.useCallback(() => {
-      const fetchServiceOrders = async () => {
-        if (!user?.id_tecnico) {
-          Alert.alert('Erro', 'Técnico não autenticado. Por favor, faça login novamente.');
-          return;
-        }
-
-        try {
-          setLoading(true);
-          const response = await api.get(`/jobsbyid/${user.id_tecnico}`); 
-          
-          if (response.data.service_order.length === 0){
-            Alert.alert('Aviso','Nenhuma ordem de serviço foi encontrada para este técnico');
-          }
-
-          setServiceOrders(response.data.service_order); 
-        } catch (error) {
-          console.error(error);
-          Alert.alert('Erro', 'Erro ao buscar as ordens de serviço.');
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchServiceOrders();
+      fetchServiceOrders(); 
     }, [user?.id_tecnico])
   );
 

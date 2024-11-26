@@ -186,6 +186,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     backgroundColor: '#fff',
     marginRight: 10,
+    fontSize: 20,
   },
   dateInput: {
     fontSize: 16,
