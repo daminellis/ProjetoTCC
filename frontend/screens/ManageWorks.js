@@ -167,7 +167,7 @@ const ManageLogsScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
-        <Text style={styles.title}>Logs</Text>
+        <Text style={styles.title}>Trabalhos</Text>
       </View>
       <View style={styles.filterContainer}>
         <Button
@@ -290,6 +290,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     borderRadius: 10,
     width: '80%',
+    height: '80%',
     alignSelf: 'center',
   },
   modalTitle: {
@@ -301,7 +302,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     marginBottom: 10,
     borderRadius: 5,
-    padding: 10,
+    padding: 5,
     elevation: 2,
   },
   selectedTechnician: {

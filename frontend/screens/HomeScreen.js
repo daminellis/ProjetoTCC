@@ -142,9 +142,6 @@ const HomeScreen = () => {
         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Avisos')}>
           <Text style={styles.buttonText}>Viu algo de errado? Clique aqui e avise</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.emergencyButton]} onPress={() => alert("Emergência!")}>
-          <Text style={styles.buttonText}>Emergência!</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );

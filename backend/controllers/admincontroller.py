@@ -310,7 +310,7 @@ def define_logs():
         id_log = data.get('id_log')
         data_criacao = data.get('data_criacao')
 
-        status = "Atibuido"
+        status = "Atribuído"
 
         if not all([id_operador, id_tecnico, id_maquina, descricao, id_log, data_criacao]):
             return jsonify({"success": False, "error": "Dados incompletos"}), 400

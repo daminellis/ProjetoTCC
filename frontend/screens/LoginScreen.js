@@ -160,13 +160,6 @@ const handleLogin = () => {
             <Text style={styles.loginButtonText}>Log-in</Text>
           )}
         </TouchableOpacity>
-
-        <Text style={styles.helpText}>
-          Esqueceu o login ou a senha? Entre em contato com o técnico.
-        </Text>
-        <Text style={styles.contactLink} onPress={() => navigation.navigate('Contact')}>
-          Contato técnico
-        </Text>
       </View>
     </View>
   );
@@ -199,8 +192,9 @@ const styles = StyleSheet.create({
     width: '40%',
     alignItems: 'center',
     backgroundColor: 'lightgray',
-    borderRadius: 20,
+    borderRadius: 10,
     marginHorizontal: 10,
+    marginVertical: 20,
   },
   activeSwitch: {
     backgroundColor: '#FEC601',
@@ -247,7 +241,7 @@ const styles = StyleSheet.create({
     padding: 10,
     width: '40%',
     alignSelf: 'center',
-    borderRadius: 50,
+    borderRadius: 10,
     alignItems: 'center',
   },
   loginButtonText: {

@@ -17,8 +17,8 @@ const TechnicianTasksScreen = () => {
   const [editedDescription, setEditedDescription] = useState('');
   const [editedCost, setEditedCost] = useState('');
   const [editedStatus, setEditedStatus] = useState('');
-  const [editedStartDate, setEditedStartDate] = useState('');
-  const [editedEndDate, setEditedEndDate] = useState('');
+
+  const [assignedFilter, setAssignedFilter] = useState("all");
 
   useFocusEffect(
     React.useCallback(() => {
@@ -54,8 +54,6 @@ const TechnicianTasksScreen = () => {
     setEditedDescription(order.descricao);
     setEditedCost(order.custo_de_peca != null ? order.custo_de_peca.toString() : 'Sem preço indicado'); 
     setEditedStatus(order.status);
-    setEditedStartDate(order.inicio_da_manutencao ? new Date(order.inicio_da_manutencao).toISOString().slice(0, 16) : ''); 
-    setEditedEndDate(order.termino_da_manutencao ? new Date(order.termino_da_manutencao).toISOString().slice(0, 16) : ''); 
     setVisible(true);
   };
   
@@ -66,18 +64,16 @@ const TechnicianTasksScreen = () => {
 
   const handleSave = async () => {
     if (!selectedOrder) return;
-
+  
     try {
       const updatedOrder = {
         descricao: editedDescription,
         custo_de_peca: parseFloat(editedCost),
         status: editedStatus,
-        inicio_da_manutencao: editedStartDate,
-        termino_da_manutencao: editedEndDate,
       };
-
-      const response = await api.put(`/editjobs/${selectedOrder.id_manutencao}`, updatedOrder);
-
+  
+      const response = await api.put(`/editjobdetails/${selectedOrder.id_manutencao}`, updatedOrder);
+  
       if (response.status === 200) {
         setServiceOrders((prevOrders) =>
           prevOrders.map((order) =>
@@ -86,76 +82,65 @@ const TechnicianTasksScreen = () => {
               : order
           )
         );
-
+  
         Alert.alert('Sucesso', 'Ordem de serviço atualizada!');
         hideModal();
-      } else {
-        Alert.alert('Erro', 'Erro ao atualizar a ordem de serviço.');
       }
     } catch (error) {
       console.error(error);
       Alert.alert('Erro', 'Erro ao salvar as alterações.');
     }
   };
+  
 
   const startService = async () => {
     if (!selectedOrder) return;
   
-    const updatedOrder = {
-      ...selectedOrder,
-      status: 'Em andamento',  // Atualiza o status para "Em andamento"
-      inicio_da_manutencao: new Date().toISOString().slice(0, 19).replace('T', ' '), // Formato: YYYY-MM-DD HH:MM:SS
-    };
-  
     try {
-      const response = await api.put(`/editjobs/${selectedOrder.id_manutencao}`, updatedOrder);
+      const response = await api.put(`/startjob/${selectedOrder.id_manutencao}`);
+      
       if (response.status === 200) {
-        setServiceOrders((prevOrders) =>
-          prevOrders.map((order) =>
-            order.id_manutencao === selectedOrder.id_manutencao
-              ? { ...order, ...updatedOrder }
-              : order
-          )
-        );
+        // Recarregar as ordens de serviço
+        await fetchServiceOrders();
         Alert.alert('Sucesso', 'Serviço iniciado!');
       }
     } catch (error) {
       console.error(error);
       Alert.alert('Erro', 'Erro ao iniciar o serviço.');
     }
-  };
-
+  };    
     
   const finishService = async () => {
     if (!selectedOrder) return;
-
-    const updatedOrder = {
-      ...selectedOrder,
-      status: 'Finalizado',  // Atualiza o status para "Finalizado"
-      termino_da_manutencao: new Date().toISOString().slice(0, 19).replace('T', ' '), // Formato: YYYY-MM-DD HH:MM:SS
-    };
-
+  
     try {
-      const response = await api.put(`/editjobs/${selectedOrder.id_manutencao}`, updatedOrder);
+      const response = await api.put(`/finishjob/${selectedOrder.id_manutencao}`);
+      
       if (response.status === 200) {
-        setServiceOrders((prevOrders) =>
-          prevOrders.map((order) =>
-            order.id_manutencao === selectedOrder.id_manutencao
-              ? { ...order, ...updatedOrder }
-              : order
-          )
-        );
+        // Recarregar as ordens de serviço
+        await fetchServiceOrders();
         Alert.alert('Sucesso', 'Serviço finalizado!');
       }
     } catch (error) {
       console.error(error);
       Alert.alert('Erro', 'Erro ao finalizar o serviço.');
     }
-  };
+  };   
 
   const toggleCard = (id) => {
     setExpandedOrderId((prev) => (prev === id ? null : id));
   };
+
+  const filteredOrders = serviceOrders.filter((order) => {
+    if (assignedFilter === 'assigned') {
+      return order.status === 'Atribuído';
+    } else if (assignedFilter === 'in-progress') {
+      return order.status === 'Em andamento';
+    } else if (assignedFilter === 'completed') {
+      return order.status === 'Finalizado'; 
+    }
+    return true;
+  });  
 
   const renderServiceOrder = ({ item }) => {
     const isExpanded = expandedOrderId === item.id_manutencao; 
@@ -210,12 +195,38 @@ const TechnicianTasksScreen = () => {
       <View style={styles.topBar}>
         <Text style={styles.title}>Ordens de Serviço</Text>
       </View>
+      <View style={styles.filterContainer}>
+        <Button
+          mode={assignedFilter === 'all' ? 'contained' : 'outlined'}
+          onPress={() => setAssignedFilter('all')}
+        >
+          Todos
+        </Button>
+        <Button
+          mode={assignedFilter === 'assigned' ? 'contained' : 'outlined'}
+          onPress={() => setAssignedFilter('assigned')}
+        >
+          Atribuídos
+        </Button>
+        <Button
+          mode={assignedFilter === 'in-progress' ? 'contained' : 'outlined'}
+          onPress={() => setAssignedFilter('in-progress')}
+        >
+          Em andamento
+        </Button>
+        <Button
+          mode={assignedFilter === 'completed' ? 'contained' : 'outlined'}
+          onPress={() => setAssignedFilter('completed')}
+        >
+          Finalizados
+        </Button>
+      </View>
       <View style={styles.content}>
         {loading ? (
           <ActivityIndicator size="large" color="#000" />
         ) : (
           <FlatList
-            data={serviceOrders}
+            data={filteredOrders}
             keyExtractor={(item) => item.id_manutencao.toString()}
             renderItem={renderServiceOrder}
             ListEmptyComponent={<Text style={styles.noDataText}>Nenhuma ordem de serviço encontrada.</Text>}
@@ -385,6 +396,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 10,
+    paddingHorizontal: 130,
+  },  
 });
 
 export default TechnicianTasksScreen;
