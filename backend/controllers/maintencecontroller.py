@@ -1,121 +1,75 @@
-from flask import jsonify, request
-from database.db import db
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.sql import text
+"""Controllers de ordens de serviço / manutenções.
 
-def get_all_Service_Orders():
-    try:
-        with db.engine.connect() as connection:
-            sql = text('SELECT * FROM logs')
-            result = connection.execute(sql)
-            service_orders = result.fetchall()
+Refatorado: usa os helpers de banco/resposta e o enum de status. A função
+`get_all_Service_Orders` foi renomeada para `get_all_service_orders`
+(snake_case consistente); a rota HTTP `/allserviceorders` permanece igual.
+"""
+from flask import request
 
-        service_orders_list = [dict(row._mapping) for row in service_orders]
+from constants import StatusManutencao
+from database.helpers import execute_write, query_all
+from utils.responses import error_response, handle_db_errors, success_response
 
-        if service_orders_list:
-            return jsonify({
-                "success": True,
-                "service_orders": service_orders_list
-            }), 200
-        else:
-            return jsonify({
-                "success": False,
-                "error": "Ordens de serviço não encontradas"
-            }), 404
 
-    except SQLAlchemyError as e:
-        error = str(e.__dict__['orig'])
-        return jsonify({'error': error}), 500
+@handle_db_errors
+def get_all_service_orders():
+    service_orders = query_all("SELECT * FROM logs")
+    if not service_orders:
+        return error_response("Ordens de serviço não encontradas", 404)
+    return success_response(service_orders=service_orders)
 
+
+@handle_db_errors
 def get_jobs_by_id(id_tecnico):
-    try:
-        with db.engine.connect() as connection:
-            sql = text('SELECT * FROM manutencoes WHERE id_tecnico = :id_tecnico')
-            result = connection.execute(sql, {'id_tecnico': id_tecnico})
-            service_order = result.fetchall()
+    service_order = query_all(
+        "SELECT * FROM manutencoes WHERE id_tecnico = :id_tecnico",
+        {"id_tecnico": id_tecnico},
+    )
+    if service_order:
+        return success_response(service_order=service_order)
+    # Mantém o contrato: lista vazia com mensagem, ainda HTTP 200.
+    return success_response(
+        service_order=[],
+        error="Nenhuma ordem de serviço foi encontrada",
+    )
 
-        if service_order:
-            service_order_list = [dict(row._mapping) for row in service_order]
-            return jsonify({
-                "success": True,
-                "service_order": service_order_list
-            }), 200
-        else:
-            return jsonify({
-                "success": True,
-                "service_order": [],
-                "error": "Nenhuma ordem de serviço foi encontrada"
-            }), 200
 
-    except SQLAlchemyError as e:
-        error = str(e.__dict__['orig'])
-        return jsonify({'error': error}), 500
-    
+@handle_db_errors
 def edit_job_details(id_manutencao):
-    """
-    Atualiza detalhes da ordem de serviço, como descrição e custo.
-    """
-    try:
-        data = request.get_json()
-        if not data or not isinstance(data, dict):
-            return jsonify({'error': 'Dados inválidos.'}), 400
+    """Atualiza detalhes da ordem de serviço, como descrição e custo."""
+    data = request.get_json()
+    if not isinstance(data, dict):
+        return error_response("Dados inválidos.", 400)
 
-        with db.engine.connect() as connection:
-            sql = text('UPDATE manutencoes SET descricao = :descricao, custo_de_peca = :custo_de_peca '
-                       'WHERE id_manutencao = :id_manutencao')
-            connection.execute(sql, {
-                'descricao': data.get('descricao'),
-                'custo_de_peca': data.get('custo_de_peca'),
-                'id_manutencao': id_manutencao
-            })
-            connection.commit()
-
-        return jsonify({'success': True, 'message': 'Detalhes atualizados com sucesso.'}), 200
-
-    except SQLAlchemyError as e:
-        error = str(e.__dict__['orig'])
-        return jsonify({'error': error}), 500
+    execute_write([(
+        "UPDATE manutencoes SET descricao = :descricao, custo_de_peca = :custo_de_peca "
+        "WHERE id_manutencao = :id_manutencao",
+        {
+            "descricao": data.get("descricao"),
+            "custo_de_peca": data.get("custo_de_peca"),
+            "id_manutencao": id_manutencao,
+        },
+    )])
+    return success_response(message="Detalhes atualizados com sucesso.")
 
 
+@handle_db_errors
 def start_job(id_manutencao):
-    """
-    Atualiza a ordem de serviço para indicar que foi iniciada.
-    """
-    try:
-        with db.engine.connect() as connection:
-            sql = text('UPDATE manutencoes SET status = :status, inicio_da_manutencao = NOW() '
-                       'WHERE id_manutencao = :id_manutencao')
-            connection.execute(sql, {
-                'status': 'Em andamento',
-                'inicio_da_manutencao': text('NOW()'),
-                'id_manutencao': id_manutencao
-            })
-            connection.commit()
-
-        return jsonify({'success': True, 'message': 'Serviço iniciado com sucesso.'}), 200
-
-    except SQLAlchemyError as e:
-        error = str(e.__dict__['orig'])
-        return jsonify({'error': error}), 500
+    """Marca a ordem de serviço como iniciada."""
+    execute_write([(
+        "UPDATE manutencoes SET status = :status, inicio_da_manutencao = NOW() "
+        "WHERE id_manutencao = :id_manutencao",
+        {"status": StatusManutencao.EM_ANDAMENTO.value, "id_manutencao": id_manutencao},
+    )])
+    return success_response(message="Serviço iniciado com sucesso.")
 
 
+@handle_db_errors
 def finish_job(id_manutencao):
-    """
-    Atualiza a ordem de serviço para indicar que foi finalizada.
-    """
-    try:
-        with db.engine.connect() as connection:
-            sql = text('UPDATE manutencoes SET status = :status, termino_da_manutencao = NOW() '
-                       'WHERE id_manutencao = :id_manutencao')
-            connection.execute(sql, {
-                'status': 'Finalizado',
-                'termino_da_manutencao': text('NOW()'),
-                'id_manutencao': id_manutencao
-            })
-            connection.commit()
-
-        return jsonify({'success': True, 'message': 'Serviço finalizado com sucesso.'}), 200
-
-    except SQLAlchemyError as e:
-        error = str(e.__dict__['orig'])
-        return jsonify({'error': error}), 500
+    """Marca a ordem de serviço como finalizada."""
+    execute_write([(
+        "UPDATE manutencoes SET status = :status, termino_da_manutencao = NOW() "
+        "WHERE id_manutencao = :id_manutencao",
+        {"status": StatusManutencao.FINALIZADO.value, "id_manutencao": id_manutencao},
+    )])
+    return success_response(message="Serviço finalizado com sucesso.")

@@ -11,18 +11,18 @@ class Manutencao(db.Model):
     id_tecnico = db.Column(db.Integer, db.ForeignKey('tecnicos.id_tecnico'), nullable=False)
     id_operador = db.Column(db.Integer, db.ForeignKey('operadores.id_operador'), nullable=False)
     status = db.Column(db.String(255), nullable=False)
-    descricao = db.Column(db.varchar(500), nullable=False)
+    descricao = db.Column(db.String(500), nullable=False)
     data_criacao = db.Column(db.DateTime, default=db.func.datetime(), nullable=False)
 
     def to_dict(self):
         return {
             'id_manutencao': self.id_manutencao,
             'id_maquina': self.id_maquina,
-            'motivo': self.motivo,
             'inicio_da_manutencao': self.inicio_da_manutencao.isoformat(),
             'termino_da_manutencao': self.termino_da_manutencao.isoformat() if self.termino_da_manutencao else None,
             'custo_de_peca': self.custo_de_peca,
             'id_tecnico': self.id_tecnico,
+            'id_operador': self.id_operador,
             'status': self.status,
             'descricao': self.descricao,
             'data_criacao': self.data_criacao.isoformat(),

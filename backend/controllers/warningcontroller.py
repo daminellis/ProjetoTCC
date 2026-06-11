@@ -1,122 +1,76 @@
-from flask import jsonify, request
-from database.db import db
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.sql import text
+"""Controllers de avisos/alertas de máquina.
+
+Refatorado: removida a variável global `id_maquina_global`, que era
+compartilhada entre todas as requisições e causava condição de corrida /
+inconsistência entre operadores. Agora a máquina vem do corpo da requisição
+e, se ausente, é resolvida a partir do operador.
+"""
 import datetime
 
-id_maquina_global = None
+from flask import jsonify, request
 
+from database.helpers import execute_write, query_all, query_one
+from utils.responses import error_response, handle_db_errors, success_response
+
+
+def _id_maquina_do_operador(id_operador):
+    row = query_one(
+        "SELECT id_maquina FROM monitores WHERE id_operador = :id_operador",
+        {"id_operador": id_operador},
+    )
+    return row["id_maquina"] if row else None
+
+
+@handle_db_errors
 def get_maquina(id_operador):
-    global id_maquina_global
+    id_maquina = _id_maquina_do_operador(id_operador)
+    if id_maquina is None:
+        return jsonify(message="Nenhuma máquina encontrada"), 404
+    # Formato dedicado consumido pelo app (response.data.id_maquina).
+    return jsonify(id_maquina=id_maquina)
 
-    try:
-        with db.engine.connect() as connection:
-            sql = text('SELECT id_maquina FROM monitores WHERE id_operador = :id_operador')
-            result = connection.execute(sql, {'id_operador': id_operador})
-            maquina = result.fetchone()
 
-        if maquina:
-            id_maquina_global = maquina[0]
-            return jsonify(id_maquina=id_maquina_global)
-        else:
-            return jsonify(message="Nenhuma máquina encontrada"), 404
-
-    except SQLAlchemyError as e:
-        error = str(e.__dict__['orig'])
-        print(f"Erro ao buscar máquina: {error}")
-        return jsonify(message="Erro ao buscar máquina"), 500
-
+@handle_db_errors
 def get_nome_maquina(id_maquina):
-    try:
-        with db.engine.connect() as connection:
-            # SQL para buscar o nome da máquina
-            sql = text('SELECT nome_maquina FROM maquinas WHERE id_maquina = :id_maquina')
-            result = connection.execute(sql, {'id_maquina': id_maquina})
-            nome_maquina = result.fetchone()
+    maquina = query_one(
+        "SELECT nome_maquina FROM maquinas WHERE id_maquina = :id_maquina",
+        {"id_maquina": id_maquina},
+    )
+    if not maquina:
+        return error_response("Máquina não encontrada", 404)
+    return success_response(nome_maquina=maquina["nome_maquina"])
 
-        if nome_maquina:
-            # Retornar o nome da máquina como JSON
-            return jsonify({
-                "success": True,
-                "nome_maquina": nome_maquina[0]
-            }), 200
-        else:
-            # Retornar 404 caso a máquina não seja encontrada
-            return jsonify({
-                "success": False,
-                "error": "Máquina não encontrada"
-            }), 404
 
-    except SQLAlchemyError as e:
-        # Capturar erros de banco de dados e retornar mensagem de erro
-        error = str(e.__dict__['orig'])
-        print(f"Erro ao buscar nome da máquina: {error}")
-        return jsonify({
-            "success": False,
-            "error": "Erro interno no servidor"
-        }), 500
-    
+@handle_db_errors
 def get_warnings():
-    try:
-        with db.engine.connect() as connection:
-            sql = text('SELECT * FROM problemas')
-            result = connection.execute(sql)
-            problemas = result.fetchall()
+    warnings = query_all("SELECT * FROM problemas")
+    if not warnings:
+        return error_response("Avisos não encontrados", 404)
+    return success_response(warnings=warnings)
 
-        problemas_lista = [dict(row._mapping) for row in problemas]
 
-        if problemas_lista:
-            return jsonify({
-                "success": True,
-                "warnings": problemas_lista
-            }), 200
-        else:
-            return jsonify({
-                "success": False,
-                "error": "Avisos não encontrados"
-            }), 404
-
-    except SQLAlchemyError as e:
-        error = str(e.__dict__['orig'])
-        return jsonify({'error': error}), 500
-
+@handle_db_errors
 def save_warning():
-    global id_maquina_global
+    data = request.json or {}
+    id_operador = data.get("id_operador")
+    descricao = data.get("descricao")
+    gravidade = data.get("gravidade")
 
-    try:
-        data = request.json
-        id_operador = data.get('id_operador')
-        descricao = data.get('descricao')
-        criado_em = datetime.datetime.now().isoformat()
-        gravidade = data.get('gravidade')
+    # A máquina vem do corpo; se faltar, resolve a partir do operador.
+    id_maquina = data.get("id_maquina") or _id_maquina_do_operador(id_operador)
+    if id_maquina is None:
+        return error_response("Nenhuma máquina encontrada para o operador", 404)
 
-        if id_maquina_global is None:
-            response = get_maquina(id_operador)
-            return response
-
-        with db.engine.connect() as connection:
-            sql = text("""
-                INSERT INTO logs (id_operador, id_maquina, descricao, criado_em, gravidade) 
-                VALUES (:id_operador, :id_maquina, :descricao, :criado_em, :gravidade)
-            """)
-            connection.execute(sql, {
-                'id_operador': id_operador,
-                'id_maquina': id_maquina_global,
-                'descricao': descricao,
-                'criado_em': criado_em,
-                'gravidade': gravidade
-            })
-            connection.commit()
-
-        return jsonify({
-            "success": True,
-            "message": "Aviso salvo com sucesso!"
-        }), 201
-
-    except SQLAlchemyError as e:
-        error = str(e.__dict__['orig'])
-        print(f"Erro ao salvar aviso: {error}")
-        return jsonify({'error': error}), 500
-    except Exception as e:
-        print(f"Erro inesperado: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+    criado_em = datetime.datetime.now().isoformat()
+    execute_write([(
+        "INSERT INTO logs (id_operador, id_maquina, descricao, criado_em, gravidade) "
+        "VALUES (:id_operador, :id_maquina, :descricao, :criado_em, :gravidade)",
+        {
+            "id_operador": id_operador,
+            "id_maquina": id_maquina,
+            "descricao": descricao,
+            "criado_em": criado_em,
+            "gravidade": gravidade,
+        },
+    )])
+    return success_response(201, message="Aviso salvo com sucesso!")

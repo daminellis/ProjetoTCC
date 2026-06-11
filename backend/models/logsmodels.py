@@ -8,8 +8,8 @@ class Log(db.Model):
     id_maquina = db.Column(db.Integer, db.ForeignKey('maquinas.id_maquina'), nullable=True)
     descricao = db.Column(db.Text, nullable=False)
     criado_em = db.Column(db.DateTime, default=db.func.current_timestamp(), nullable=False)
-    gravidade = db.Column(db.Integer, nullable=False)  
-    status = db.Column(db.varchar(255))
+    gravidade = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.String(255))
 
     # Método para retornar um dicionário com os dados
     def to_dict(self):

@@ -1,1 +1,13 @@
 venv/
+.venv/
+
+# Variáveis de ambiente (segredos não vão para o versionamento)
+.env
+backend/.env
+
+# Artefatos Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/

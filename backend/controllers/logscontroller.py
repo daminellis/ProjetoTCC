@@ -1,55 +1,56 @@
-from flask import request, jsonify
-from database.db import db
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.sql import text
+"""Controllers de autenticação (login de operador e de técnico).
 
+Refatorado: a senha do técnico agora é verificada via hash (`security`) em vez
+de comparação em texto puro. A resposta de credencial inválida mantém HTTP 200
+com `{success: False, error: ...}` para preservar o contrato que o app consome.
+"""
+from flask import request
+
+from database.helpers import query_one
+from security import verify_password
+from utils.responses import error_response, handle_db_errors, success_response
+
+
+@handle_db_errors
 def logs_controller():
-    if request.method == 'POST':
-        data = request.get_json()
-        id_maquina = data.get('id_maquina')
-        id_operador = data.get('id_operador')
+    data = request.get_json() or {}
+    id_maquina = data.get("id_maquina")
+    id_operador = data.get("id_operador")
 
-        try:
-            query = text("SELECT id_maquina, id_operador FROM monitores WHERE id_maquina = :id_maquina AND id_operador = :id_operador")
-            result = db.session.execute(query, {'id_maquina': id_maquina, 'id_operador': id_operador})
-            usuario = result.fetchone()
+    usuario = query_one(
+        "SELECT id_maquina, id_operador FROM monitores "
+        "WHERE id_maquina = :id_maquina AND id_operador = :id_operador",
+        {"id_maquina": id_maquina, "id_operador": id_operador},
+    )
 
-            if not usuario:
-                return jsonify({'error': 'A senha ou usuário estão incorretos.'})
+    if not usuario:
+        return error_response("A senha ou usuário estão incorretos.", 200)
 
-            objeto_usuario = {
-                'id_maquina': usuario.id_maquina,
-                'id_operador': usuario.id_operador,
-            }
+    return success_response(
+        user={
+            "id_maquina": usuario["id_maquina"],
+            "id_operador": usuario["id_operador"],
+        }
+    )
 
-            return jsonify({'success': True, 'user': objeto_usuario})
 
-        except SQLAlchemyError as e:
-            error = str(e.__dict__['orig'])
-            return jsonify({'error': error})
-        
+@handle_db_errors
 def logstecnico_controller():
-    if request.method == 'POST':
-        data = request.get_json()
-        id_tecnico = data.get('id_tecnico')
-        senha = data.get('senha')
+    data = request.get_json() or {}
+    id_tecnico = data.get("id_tecnico")
+    senha = data.get("senha")
 
-        try:
-            query = text("SELECT id_tecnico, nome FROM tecnicos WHERE id_tecnico = :id_tecnico AND senha = :senha")
-            result = db.session.execute(query, {'id_tecnico': id_tecnico, 'senha': senha})
-            tecnico = result.fetchone()
+    tecnico = query_one(
+        "SELECT id_tecnico, nome, senha FROM tecnicos WHERE id_tecnico = :id_tecnico",
+        {"id_tecnico": id_tecnico},
+    )
 
-            if not tecnico:
-                return jsonify({'error': 'A senha ou técnico estão incorretos.'})
+    if not tecnico or not verify_password(tecnico.get("senha"), senha or ""):
+        return error_response("A senha ou técnico estão incorretos.", 200)
 
-            objeto_tecnico = {
-                'id_tecnico': tecnico.id_tecnico,
-                'nome': tecnico.nome
-            }
-
-            return jsonify({'success': True, 'user': objeto_tecnico})
-
-        except SQLAlchemyError as e:
-            error = str(e.__dict__['orig'])
-            return jsonify({'error': error})
-
+    return success_response(
+        user={
+            "id_tecnico": tecnico["id_tecnico"],
+            "nome": tecnico["nome"],
+        }
+    )
